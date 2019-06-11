@@ -94,7 +94,7 @@ public class TestsTurnService {
         dicPosPiece.put(bishop.getPosition(), bishop);
         dicPosPiece.put(opponentPawnOne.getPosition(), opponentPawnOne);
 
-        var arrayOfMovementsExpected = new Movement[21];
+        var arrayOfMovementsExpected = new Movement[7];
         arrayOfMovementsExpected[0] = new Movement(new Position(1, 1), bishop.getPosition(), Direction.FRDiagonal);
         arrayOfMovementsExpected[1] = new Movement(new Position(2, 2), bishop.getPosition(), Direction.FRDiagonal);
         arrayOfMovementsExpected[2] = new Movement(new Position(3, 3), bishop.getPosition(), Direction.FRDiagonal);
