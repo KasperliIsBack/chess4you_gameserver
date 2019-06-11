@@ -8,9 +8,9 @@ public class King extends Piece {
     public King(Color color) {
         super(color);
         this.setDirections(new DirectionType[]{
-                DirectionType.Rochade,
-                DirectionType.Linear,
                 DirectionType.Diagonal,
+                DirectionType.Linear,
+                DirectionType.Rochade,
         });
         this.setType(PieceType.King);
     }

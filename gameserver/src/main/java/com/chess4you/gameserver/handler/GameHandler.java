@@ -40,7 +40,8 @@ public class GameHandler {
         return gson.toJson(movementArray);
     }
 
-    public String doTurn(String lobbyUuid, String playerUuid, String movement) {
+    public String doTurn(String lobbyUuid, String playerUuid, String jsonMovement) {
+        Movement movement = gson.fromJson(jsonMovement, Movement.class);
         Field[][] board = gameService.doTurn(lobbyUuid, playerUuid, movement);
         return gson.toJson(board);
     }

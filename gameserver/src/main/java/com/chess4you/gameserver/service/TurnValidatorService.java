@@ -64,7 +64,7 @@ public class TurnValidatorService {
                && movement.getNewPosition().getPosX() <= 7;
     }
 
-    public boolean rochadePossible(Dictionary<Position, Piece> DicPosPiece, Piece piece) {
+    public boolean isRochadePossible(Dictionary<Position, Piece> DicPosPiece, Piece piece) {
         List<Position> listPosition =  Collections.list(DicPosPiece.keys()).stream()
                 .filter(position ->
                     position.getPosY() == piece.getPosition().getPosY()
@@ -94,52 +94,57 @@ public class TurnValidatorService {
                 ? Direction.bigRochade : Direction.smallRochade;
     }
 
-    public boolean enPassePossible(Dictionary<Position, Piece> dicPosPiece, Piece piece) {
+    public boolean isEnPassePossible(Dictionary<Position, Piece> dicPosPiece, Piece piece) {
         List<Position> tmpPositions = Collections.list(dicPosPiece.keys());
-        var posXPiece = piece.getPosition().getPosX();
-        var posYPiece = piece.getPosition().getPosY();
+        int posXPiece = piece.getPosition().getPosX();
+        int posYPiece = piece.getPosition().getPosY();
+        Position posForward;
+        Position posLeft;
+        Position posForwardLeft;
+        Position posRight;
+        Position posForwardRight;
         if(piece.getColor() == Color.Black) {
-            Position posForwardBlack = new Position(posXPiece, posYPiece + 1);
-            Position posForwardLeftBlack = new Position(posXPiece - 1, posYPiece + 1);
-            Position posForwardRightBlack = new Position(posXPiece + 1, posYPiece + 1);
-            if(onStartPosition(piece)) {
-                if(tmpPositions.contains(posForwardBlack)) {
-                    if(positionValid(posForwardLeftBlack)) {
-                        if(tmpPositions.contains(posForwardLeftBlack)) {
-                            return true;
-                        }
-                    } else if(positionValid(posForwardRightBlack)) {
-                        if(tmpPositions.contains(posForwardRightBlack)) {
-                            return true;
-                        }
+            posForward = new Position(posXPiece, posYPiece + 1);
+            posLeft = new Position(posXPiece - 1, posYPiece);
+            posForwardLeft = new Position(posXPiece - 1, posYPiece - 1);
+            posRight = new Position(posXPiece + 1, posYPiece);
+            posForwardRight = new Position(posXPiece + 1, posYPiece - 1);
+        } else {
+            posForward = new Position(posXPiece, posYPiece - 1);
+            posLeft = new Position(posXPiece - 1, posYPiece);
+            posForwardLeft = new Position(posXPiece - 1, posYPiece + 1);
+            posRight = new Position(posXPiece + 1, posYPiece);
+            posForwardRight = new Position(posXPiece + 1, posYPiece + 1);
+        }
+        if(onStartPosition(piece)) {
+            if(containsPosition(tmpPositions, posForward)) {
+                if(positionValid(posLeft)) {
+                    if(containsPosition(tmpPositions, posLeft) && !containsPosition(tmpPositions, posForwardLeft)) {
+                        return true;
+                    }
+                }
+                if(positionValid(posRight)) {
+                    if(containsPosition(tmpPositions, posRight) && !containsPosition(tmpPositions, posForwardRight)) {
+                        return true;
                     }
                 }
             }
-            return false;
-        } else {
-            Position posForwardWhite = new Position(posXPiece, posYPiece - 1);
-            Position posForwardLeftWhite = new Position(posXPiece - 1, posYPiece - 1);
-            Position posForwardRightWhite = new Position(posXPiece + 1, posYPiece - 1);
-            if(onStartPosition(piece)) {
-                if(tmpPositions.contains(posForwardWhite)) {
-                  if(positionValid(posForwardLeftWhite)) {
-                      if(tmpPositions.contains(posForwardLeftWhite)) {
-                          return true;
-                      }
-                  } else if(positionValid(posForwardRightWhite)) {
-                      if(tmpPositions.contains(posForwardRightWhite)) {
-                          return true;
-                      }
-                  }
-                }
-            }
-            return false;
         }
+        return false;
+    }
+    public boolean containsPosition(List<Position> listPosition, Position testPosition){
+        for (var position : listPosition) {
+            if(position.getPosY() == testPosition.getPosY()
+            && position.getPosX() == testPosition.getPosX()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean positionValid(Position position) {
-        if(position.getPosX() >= 1 && position.getPosX() <= 7
-        && position.getPosY() >= 1 && position.getPosY() <= 7) {
+        if(position.getPosX() >= 0 && position.getPosX() <= 7
+        && position.getPosY() >= 0 && position.getPosY() <= 7) {
             return true;
         } else {
             return false;

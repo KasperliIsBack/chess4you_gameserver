@@ -8,7 +8,7 @@ public class Bishop extends Piece {
     public Bishop(Color color) {
         super(color);
         this.setDirections(new DirectionType[]{
-                DirectionType.Linear,
+                DirectionType.Diagonal,
         });
         this.setType(PieceType.Bishop);
     }
