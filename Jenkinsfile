@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('open folder') {
       steps {
-        sh 'cd gameserver'
+        dir(path: 'gamserver')
       }
     }
     stage('gradle clean') {
