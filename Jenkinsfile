@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('gradle clean') {
       steps {
-        sh 'cd gameserver'
+        sh './gameserver/gradlew clean'
       }
     }
   }
