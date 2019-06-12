@@ -41,6 +41,11 @@ pipeline {
 
       }
     }
+    stage('docker remove old container') {
+      steps {
+        sh 'docker rm $(docker ps -a -q --filter "tag=gameserver")'
+      }
+    }
     stage('docker run') {
       steps {
         sh 'docker run -p 8081:8081 -t com.chess4you/gameserver'
