@@ -25,7 +25,6 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 apply plugin: 'org.sonarqube'
 apply plugin: 'jacoco'
-apply plugin: 'war'
 apply plugin: 'com.palantir.docker'
 
 group = 'com.chess4you'
@@ -51,10 +50,6 @@ test {
 		destinationFile = file("$buildDir/jacoco/jacocoTest.exec")
 		classDumpDir = file("$buildDir/jacoco/classpathdumps")
 	}
-}
-
-war {
-	enabled = true
 }
 
 task unpack(type: Copy) {
