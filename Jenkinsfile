@@ -4,7 +4,7 @@ pipeline {
     stage('gradle wrapper') {
       steps {
         sh '''cd gameserver
-gradlew clean'''
+./gradlew clean'''
       }
     }
   }
