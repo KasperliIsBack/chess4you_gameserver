@@ -33,5 +33,18 @@ pipeline {
 
       }
     }
+    stage('gradle docker') {
+      steps {
+        dir(path: 'gameserver') {
+          sh './gradlew build docker -x test'
+        }
+
+      }
+    }
+    stage('docker run') {
+      steps {
+        sh 'docker run -p 8081:8081 -t com.chess4you/gameserver'
+      }
+    }
   }
 }
