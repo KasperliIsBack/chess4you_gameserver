@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('gradle clean') {
       steps {
-        sh 'sh \'ll\''
+        sh 'll'
       }
     }
   }
