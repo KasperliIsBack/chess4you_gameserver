@@ -12,7 +12,7 @@ pipeline {
     stage('gradle build') {
       steps {
         dir(path: 'gameserver') {
-          sh './gradlew build'
+          sh './gradlew build -x test'
         }
 
       }
