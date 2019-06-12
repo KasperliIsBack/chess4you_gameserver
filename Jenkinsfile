@@ -3,12 +3,8 @@ pipeline {
   stages {
     stage('gradle wrapper') {
       steps {
-        sh './gameserver/gradlew wrapper'
-      }
-    }
-    stage('gradle clean') {
-      steps {
-        sh './gameserver/gradlew clean'
+        sh '''cd gameserver
+gradlew clean'''
       }
     }
   }
