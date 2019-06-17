@@ -54,7 +54,7 @@ pipeline {
     }
     stage('docker run') {
       steps {
-        sh 'docker run -d -p 8082:8082 -t com.chess4you/gameserver'
+        sh 'docker run -d -p 8081:8081 -t com.chess4you/gameserver'
       }
     }
   }
