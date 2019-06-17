@@ -20,7 +20,7 @@ public class SpringFoxConfig {
     public Docket apiDocket(){
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("server.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.chess4you.gameserver.controller"))
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(getApiInfo());
@@ -28,8 +28,8 @@ public class SpringFoxConfig {
 
     private ApiInfo getApiInfo() {
         return new ApiInfo(
-                "LobbyServer Api",
-                "Api für den LobbyServer",
+                "GameServer Api",
+                "Api für den GameServer",
                 "1.0",
                 "",
                 new Contact("Andri", "", ""),
