@@ -33,22 +33,28 @@ pipeline {
 
       }
     }
-    stage('gradle docker') {
+    stage('docker stop') {
       steps {
-        dir(path: 'gameserver') {
+        sh '[ -z $(docker ps -aqf "label=server=gameServer") ] || docker stop $(docker ps -aqf "label=server=gameServer")'
+      }
+    }
+    stage('docker remove') {
+      steps {
+        sh '[ -z $(docker ps -aqf "label=server=gameServer") ] || docker rm $(docker ps -aqf "label=server=gameServer")'
+      }
+    }
+    stage('gradle docker build') {
+      steps {
+        dir(path: 'lobbyserver') {
           sh './gradlew build docker -x test'
+          sh 'docker ps -aqf "label=server=gameServer"'
         }
 
       }
     }
-    stage('docker remove old container') {
-      steps {
-        sh 'docker rm $(docker ps -a -q --filter "tag=gameserver")'
-      }
-    }
     stage('docker run') {
       steps {
-        sh 'docker run -p 8081:8081 -t com.chess4you/gameserver'
+        sh 'docker run -d -p 8082:8082 -t com.chess4you/gameserver'
       }
     }
   }
