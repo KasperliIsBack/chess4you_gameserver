@@ -45,7 +45,7 @@ pipeline {
     }
     stage('gradle docker build') {
       steps {
-        dir(path: 'lobbyserver') {
+        dir(path: 'gameserver') {
           sh './gradlew build docker -x test'
           sh 'docker ps -aqf "label=server=gameServer"'
         }
@@ -54,7 +54,7 @@ pipeline {
     }
     stage('docker run') {
       steps {
-        sh 'docker run -d -p 8082:8082 -t com.chess4you/gameserver'
+        sh 'docker run -d -p 8081:8081 -t com.chess4you/gameserver'
       }
     }
   }
