@@ -45,7 +45,7 @@ pipeline {
     }
     stage('gradle docker build') {
       steps {
-        dir(path: 'lobbyserver') {
+        dir(path: 'gameserver') {
           sh './gradlew build docker -x test'
           sh 'docker ps -aqf "label=server=gameServer"'
         }
