@@ -26,7 +26,7 @@ public class GameService {
     public GameService(TurnService turnService, GameDataService gameDataService, GameServerService gameServerService){
         this.turnService = turnService;
         this.gameDataService = gameDataService;
-        this.gameDataService = gameDataService;
+        this.gameServerService = gameServerService;
     }
 
     public String connect(String gameUuid, String playerUuid) {
