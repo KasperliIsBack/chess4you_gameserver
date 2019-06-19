@@ -20,7 +20,7 @@ public class GameServerService {
 
     public void registerGameServer() {
         String serverName = "GameServer" + new Date().toString();
-        GameServer gameServer = new GameServer(serverName, host, port);
+        GameServer gameServer = new GameServer(serverName, host, port, false);
         gameServerRepository.insert(gameServer);
     }
 }

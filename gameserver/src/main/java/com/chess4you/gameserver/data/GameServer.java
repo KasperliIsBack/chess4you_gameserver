@@ -15,5 +15,5 @@ public class GameServer {
     @NonNull private String Name;
     @NonNull private String Host;
     @NonNull private int Port;
-    private Boolean IsRunning;
+    @NonNull private Boolean IsRunning;
 }
