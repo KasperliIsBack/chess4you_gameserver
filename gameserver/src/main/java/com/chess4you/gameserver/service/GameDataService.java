@@ -9,17 +9,17 @@ import java.util.Optional;
 
 @Service
 public class GameDataService {
-    private IGameDataRepository gameRepository;
+    private IGameDataRepository gameDataRepository;
 
     @Autowired
     public GameDataService(IGameDataRepository gameRepository) {
-        this.gameRepository = gameRepository;
+        this.gameDataRepository = gameRepository;
     }
 
     public GameData getGameData(String gameUuid, String currentPlayerUuid) {
-        if(gameRepository.existsById(gameUuid)) {
+        if(gameDataRepository.existsById(gameUuid)) {
             if(isPlayerOnTurn(gameUuid, currentPlayerUuid)) {
-                return gameRepository.findById(gameUuid).get();
+                return gameDataRepository.findById(gameUuid).get();
             } else {
                 // Todo throw Exception not valid player
                 return null;
@@ -31,8 +31,8 @@ public class GameDataService {
     }
 
     public GameData updateGameData(GameData gameData) {
-        if(gameRepository.existsById(gameData.getUuidGame())) {
-            return gameRepository.save(gameData);
+        if(gameDataRepository.existsById(gameData.getGameUuid())) {
+            return gameDataRepository.save(gameData);
         } else {
             // Todo throw Exception no game available
             return null;
@@ -40,7 +40,7 @@ public class GameDataService {
     }
 
     private boolean isPlayerOnTurn(String gameUuid, String currentPlayerUuid) {
-        Optional<GameData> gameData = gameRepository.findById(gameUuid);
-        return gameData.get().getCurrentPlayer().getPlayerUUID() == currentPlayerUuid ? true : false;
+        Optional<GameData> gameData = gameDataRepository.findById(gameUuid);
+        return gameData.get().getCurrentPlayer().getPlayerUuid() == currentPlayerUuid ? true : false;
     }
 }

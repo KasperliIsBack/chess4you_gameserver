@@ -17,17 +17,17 @@ import java.util.Dictionary;
 @Data
 @RequiredArgsConstructor
 public class GameData {
-    @Id private String UuidGame;
-    @NonNull private String GameName;
-    @NonNull private Player FirstPlayer;
+    @Id private String gameUuid;
+    @NonNull private String gameName;
+    @NonNull private Player firstPlayer;
     @NonNull private Color colorFirstPlayer;
-    private boolean IsFirstPlayerConnected;
-    @NonNull private Player SecondPlayer;
+    private boolean isFirstPlayerConnected;
+    @NonNull private Player secondPlayer;
     @NonNull private Color colorSecondPlayer;
-    private boolean IsSecondPlayerConnected;
-    @NonNull private Player CurrentPlayer;
-    private int GamePeriodInMinute;
-    private Date TurnDate;
-    private Movement[] HistoryOfMovements;
-    private Dictionary<Position, Piece> DicPosPiece;
+    private boolean isSecondPlayerConnected;
+    @NonNull private Player currentPlayer;
+    private int gamePeriodInMinute;
+    private Date turnDate;
+    private Movement[] historyOfMovements;
+    private Dictionary<Position, Piece> dicPosPiece;
 }

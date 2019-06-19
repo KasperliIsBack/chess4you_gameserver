@@ -13,6 +13,6 @@ import javax.validation.constraints.Size;
 @RequiredArgsConstructor
 public class Player {
     @Id
-    private String PlayerUUID;
+    private String playerUuid;
     @NonNull @Size(max = 12) private String playerName;
 }

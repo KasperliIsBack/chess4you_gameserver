@@ -17,13 +17,15 @@ public class GameService {
 
     private TurnService turnService;
     private GameDataService gameDataService;
+    private GameServerService gameServerService;
     private GameData gameData;
     private Movement[] currentMovementArray;
     private final int GamePeriodInMinute = 10;
 
     @Autowired
-    public GameService(TurnService turnService, GameDataService gameDataService){
+    public GameService(TurnService turnService, GameDataService gameDataService, GameServerService gameServerService){
         this.turnService = turnService;
+        this.gameDataService = gameDataService;
         this.gameDataService = gameDataService;
     }
 
@@ -89,7 +91,7 @@ public class GameService {
     }
 
     private GameData updateTurn(GameData gameData, String playerUuid) {
-        if(gameData.getFirstPlayer().getPlayerUUID() == playerUuid) {
+        if(gameData.getFirstPlayer().getPlayerUuid() == playerUuid) {
             gameData.setCurrentPlayer(gameData.getSecondPlayer());
         } else {
             gameData.setCurrentPlayer(gameData.getFirstPlayer());
@@ -109,7 +111,7 @@ public class GameService {
     }
 
     private GameData startGameIfAllPlayersConnected(GameData gameData) {
-        if(gameData.isIsFirstPlayerConnected() && gameData.isIsSecondPlayerConnected()) {
+        if(gameData.isFirstPlayerConnected() && gameData.isSecondPlayerConnected()) {
             var dicPosPiece = generateDicPosPiece();
             gameData.setDicPosPiece(dicPosPiece);
             gameData.setTurnDate(new Date());
@@ -146,7 +148,7 @@ public class GameService {
     private boolean setIsReverse(GameData gameData, String playerUuid) {
         boolean reverse;
         Color color;
-        if(gameData.getFirstPlayer().getPlayerUUID() == playerUuid) {
+        if(gameData.getFirstPlayer().getPlayerUuid() == playerUuid) {
             color = gameData.getColorFirstPlayer();
         } else {
             color = gameData.getColorSecondPlayer();
@@ -194,11 +196,15 @@ public class GameService {
     }
 
     private GameData setIsPlayerConnected(GameData gameData, String playerUuid) {
-        if(gameData.getFirstPlayer().getPlayerUUID() == playerUuid) {
-            gameData.setIsFirstPlayerConnected(true);
+        if(gameData.getFirstPlayer().getPlayerUuid() == playerUuid) {
+            gameData.setFirstPlayerConnected(true);
         } else {
-            gameData.setIsSecondPlayerConnected(true);
+            gameData.setSecondPlayerConnected(true);
         }
         return gameData;
+    }
+
+    public void registerGameServer() {
+        gameServerService.registerGameServer();
     }
 }

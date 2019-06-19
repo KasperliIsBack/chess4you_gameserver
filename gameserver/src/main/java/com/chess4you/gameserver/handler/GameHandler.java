@@ -18,6 +18,7 @@ public class GameHandler {
     public GameHandler(GameService gameDataService){
         this.gameService = gameDataService;
         this.gson = new Gson();
+        this.gameService.registerGameServer();
     }
 
     public String connect(String gameUuid, String playerUuid){

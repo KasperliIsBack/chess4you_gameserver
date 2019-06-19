@@ -14,15 +14,15 @@ import java.util.UUID;
 @Data
 public abstract class Piece {
     @Setter(AccessLevel.NONE)
-    private UUID Uuid = UUID.randomUUID();
+    private UUID pieceUuid = UUID.randomUUID();
     @Setter(AccessLevel.NONE)
     @NonNull private Color color;
-    private String name;
+    private String pieceName;
     private Position position;
     private PieceType type;
     private DirectionType[] directions;
     public Piece(Color color){
-        name = this.getClass().getName() + color.toString();
+        pieceName = this.getClass().getName() + color.toString();
         this.color = color;
     }
 }
