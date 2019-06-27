@@ -4,10 +4,7 @@ import com.chess4you.gameserver.data.enums.Color;
 import com.chess4you.gameserver.data.enums.DirectionType;
 import com.chess4you.gameserver.data.enums.PieceType;
 import com.chess4you.gameserver.data.movement.Position;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -21,9 +18,11 @@ public abstract class Piece {
     private Position position;
     private PieceType type;
     private DirectionType[] directions;
-    public Piece(Color color){
-        pieceName = this.getClass().getName() + color.toString();
+    public Piece(Color color, Position position){
+        pieceName = this.getClass().getCanonicalName() + color.toString();
+        pieceName = pieceName.substring(pieceName.lastIndexOf(".") + 1);
         this.color = color;
+        this.position = position;
     }
 }
 

@@ -1,6 +1,7 @@
 package com.chess4you.gameserver.service;
 
 import com.chess4you.gameserver.data.GameData;
+import com.chess4you.gameserver.exceptionHandling.exception.GameDataIsNotAvailable;
 import com.chess4you.gameserver.repository.IGameDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,31 +17,24 @@ public class GameDataService {
         this.gameDataRepository = gameRepository;
     }
 
-    public GameData getGameData(String gameUuid, String currentPlayerUuid) {
-        if(gameDataRepository.existsById(gameUuid)) {
-            if(isPlayerOnTurn(gameUuid, currentPlayerUuid)) {
-                return gameDataRepository.findById(gameUuid).get();
+    public GameData getGameData(String gameDataUuid) throws Exception {
+        if(gameDataRepository.existsById(gameDataUuid)) {
+            Optional<GameData> gameData = gameDataRepository.findById(gameDataUuid);
+            if(gameData.isPresent()) {
+                return gameData.get();
             } else {
-                // Todo throw Exception not valid player
-                return null;
+                throw new GameDataIsNotAvailable(gameDataUuid);
             }
         } else {
-            // Todo throw Exception no game available
-            return null;
+            throw new GameDataIsNotAvailable(gameDataUuid);
         }
     }
 
-    public GameData updateGameData(GameData gameData) {
+    public GameData updateGameData(GameData gameData) throws Exception {
         if(gameDataRepository.existsById(gameData.getGameUuid())) {
             return gameDataRepository.save(gameData);
         } else {
-            // Todo throw Exception no game available
-            return null;
+            throw new GameDataIsNotAvailable(gameData.getGameUuid());
         }
-    }
-
-    private boolean isPlayerOnTurn(String gameUuid, String currentPlayerUuid) {
-        Optional<GameData> gameData = gameDataRepository.findById(gameUuid);
-        return gameData.get().getCurrentPlayer().getPlayerUuid() == currentPlayerUuid ? true : false;
     }
 }

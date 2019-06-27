@@ -21,29 +21,28 @@ public class GameHandler {
         this.gameService.registerGameServer();
     }
 
-    public String connect(String gameUuid, String playerUuid){
-        String message = gameService.connect(gameUuid, playerUuid);
+    public String connect(String gameDataUuid, String playerUuid) throws Exception {
+        String message = gameService.connect(gameDataUuid, playerUuid);
         return message;
     }
 
-    public String getInfo(String gameUuid, String playerUuid) {
-        GameData gameData = gameService.getInfo(gameUuid, playerUuid);
+    public String getInfo(String gameDataUuid, String playerUuid) throws Exception {
+        GameData gameData = gameService.getInfo(gameDataUuid, playerUuid);
         return gson.toJson(gameData);
     }
 
-    public String getBoard(String gameUuid, String playerUuid) {
-        Field[][] board = gameService.getBoard(gameUuid, playerUuid);
+    public String getBoard(String gameDataUuid, String playerUuid) throws Exception {
+        Field[][] board = gameService.getBoard(gameDataUuid, playerUuid);
         return gson.toJson(board);
     }
 
-    public String getTurn(String gameUuid, String playerUuid, String position) {
-        Movement[] movementArray = gameService.getTurn(gameUuid, playerUuid, position);
+    public String getTurn(String gameDataUuid, String playerUuid, String position) throws Exception {
+        Movement[] movementArray = gameService.getTurn(gameDataUuid, playerUuid, position);
         return gson.toJson(movementArray);
     }
 
-    public String doTurn(String lobbyUuid, String playerUuid, String jsonMovement) {
-        Movement movement = gson.fromJson(jsonMovement, Movement.class);
-        Field[][] board = gameService.doTurn(lobbyUuid, playerUuid, movement);
+    public String doTurn(String gameDataUuid, String playerUuid, Movement movement) throws Exception {
+        Field[][] board = gameService.doTurn(gameDataUuid, playerUuid, movement);
         return gson.toJson(board);
     }
 }

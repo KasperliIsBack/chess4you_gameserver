@@ -11,7 +11,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
-import java.util.Dictionary;
+import java.util.Map;
 
 @Document(collection = "gameData")
 @Data
@@ -29,5 +29,5 @@ public class GameData {
     private int gamePeriodInMinute;
     private Date turnDate;
     private Movement[] historyOfMovements;
-    private Dictionary<Position, Piece> dicPosPiece;
+    private Map<Position, Piece> mapPosPiece;
 }

@@ -9,10 +9,7 @@ import com.chess4you.gameserver.data.piece.Piece;
 import lombok.var;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Dictionary;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,12 +39,13 @@ public class TurnValidatorService {
         }
     }
 
-    public PositionType pieceOnPosition(Dictionary<Position, Piece> listPosPieceType, Position position, Piece piece) {
-       ArrayList<Position> listPosition = Collections.list(listPosPieceType.keys());
+    public PositionType pieceOnPosition(Map<Position, Piece> mapPosPiece, Position position, Piece piece) {
+       ArrayList<Position> listPosition =  new ArrayList<>();
+        listPosition.addAll(mapPosPiece.keySet());
        for(var position2 : listPosition) {
             if( position2.getPosX() == position.getPosX() &&
                     position2.getPosY() == position.getPosY()) {
-                if(listPosPieceType.get(position2).getColor() == piece.getColor()) {
+                if(mapPosPiece.get(position2).getColor() == piece.getColor()) {
                     return PositionType.Friendly;
                 } else {
                     return PositionType.Enemeny;
@@ -64,8 +62,10 @@ public class TurnValidatorService {
                && movement.getNewPosition().getPosX() <= 7;
     }
 
-    public boolean isRochadePossible(Dictionary<Position, Piece> DicPosPiece, Piece piece) {
-        List<Position> listPosition =  Collections.list(DicPosPiece.keys()).stream()
+    public boolean isRochadePossible(Map<Position, Piece> mapPosPiece, Piece piece) {
+        List<Position> listPosition =  new ArrayList<>();
+        listPosition.addAll(mapPosPiece.keySet());
+        listPosition.stream()
                 .filter(position ->
                     position.getPosY() == piece.getPosition().getPosY()
                 )
@@ -74,7 +74,7 @@ public class TurnValidatorService {
 
         if(listPosition.size() == 1){
             if(onStartPosition(piece)) {
-                if(onStartPosition(DicPosPiece.get(piece.getPosition()))) {
+                if(onStartPosition(mapPosPiece.get(piece.getPosition()))) {
                     return true;
                 }
             }
@@ -82,8 +82,10 @@ public class TurnValidatorService {
         return false;
    }
 
-    public Direction rochadeType(Dictionary<Position, Piece> DicPosPiece, Piece piece) {
-        List<Position> listPosition =  Collections.list(DicPosPiece.keys()).stream()
+    public Direction rochadeType(Map<Position, Piece> mapPosPiece, Piece piece) {
+        List<Position> listPosition =  new ArrayList<>();
+        listPosition.addAll(mapPosPiece.keySet());
+        listPosition.stream()
                 .filter(position ->
                         position.getPosY() == piece.getPosition().getPosY()
                 )
@@ -94,8 +96,9 @@ public class TurnValidatorService {
                 ? Direction.bigRochade : Direction.smallRochade;
     }
 
-    public boolean isEnPassePossible(Dictionary<Position, Piece> dicPosPiece, Piece piece) {
-        List<Position> tmpPositions = Collections.list(dicPosPiece.keys());
+    public boolean isEnPassePossible(Map<Position, Piece> mapPosPiece, Piece piece) {
+        List<Position> tmpPositions =  new ArrayList<>();
+        tmpPositions.addAll(mapPosPiece.keySet());
         int posXPiece = piece.getPosition().getPosX();
         int posYPiece = piece.getPosition().getPosY();
         Position posForward;

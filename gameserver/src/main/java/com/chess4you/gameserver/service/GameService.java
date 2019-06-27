@@ -3,9 +3,11 @@ package com.chess4you.gameserver.service;
 import com.chess4you.gameserver.data.GameData;
 import com.chess4you.gameserver.data.board.Field;
 import com.chess4you.gameserver.data.enums.Color;
+import com.chess4you.gameserver.data.enums.PieceType;
 import com.chess4you.gameserver.data.movement.Movement;
 import com.chess4you.gameserver.data.movement.Position;
 import com.chess4you.gameserver.data.piece.*;
+import com.chess4you.gameserver.exceptionHandling.exception.*;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,57 +31,82 @@ public class GameService {
         this.gameServerService = gameServerService;
     }
 
-    public String connect(String gameUuid, String playerUuid) {
-        gameData = gameDataService.getGameData(gameUuid, playerUuid);
+    public String connect(String gameDataUuid, String playerUuid) throws Exception {
+        try {
+            gameData = gameDataService.getGameData(gameDataUuid);
+        } catch (Exception ex) {
+            throw new GameDataIsNotAvailable(gameDataUuid);
+        }
         gameData = setIsPlayerConnected(gameData, playerUuid);
         gameData = startGameIfAllPlayersConnected(gameData);
         gameDataService.updateGameData(gameData);
         return "Connection was successful";
     }
 
-    public GameData getInfo(String gameUuid, String playerUuid) {
-        return gameDataService.getGameData(gameUuid, playerUuid);
+    public GameData getInfo(String gameDataUuid, String playerUuid) throws Exception {
+        try {
+            gameData = gameDataService.getGameData(gameDataUuid);
+        } catch (Exception ex) {
+            throw new GameDataIsNotAvailable(gameDataUuid);
+        }
+        return gameData;
     }
 
-    public Field[][] getBoard(String gameUuid, String playerUuid) {
-        gameData = gameDataService.getGameData(gameUuid, playerUuid);
+    public Field[][] getBoard(String gameDataUuid, String playerUuid) throws Exception {
+        try {
+            gameData = gameDataService.getGameData(gameDataUuid);
+        } catch (Exception ex) {
+            throw new GameDataIsNotAvailable(gameDataUuid);
+        }
         return generateBoard(gameData, playerUuid);
     }
 
-    public Movement[] getTurn(String gameUuid, String playerUuid, String position) {
-        gameData = gameDataService.getGameData(gameUuid, playerUuid);
-        currentMovementArray = turnService.getPossibleTurnFor(gameData.getDicPosPiece(), getPieceOnThatPosition(gameData, position));
-        if(IsInGamePeriod(gameData)) {
-            return currentMovementArray;
+    public Movement[] getTurn(String gameDataUuid, String playerUuid, String position) throws Exception {
+        try {
+            gameData = gameDataService.getGameData(gameDataUuid);
+        } catch (Exception ex) {
+            throw new GameDataIsNotAvailable(gameDataUuid);
+        }
+        if(isPlayerOnTurn(gameData, playerUuid)) {
+            currentMovementArray = turnService.getPossibleTurnFor(gameData.getMapPosPiece(), getPieceOnThatPosition(gameData, position));
+            if(IsInGamePeriod(gameData)) {
+                return currentMovementArray;
+            } else {
+                return currentMovementArray;
+            }
         } else {
-            // Todo send message
-            return currentMovementArray;
+            throw new PlayerIsNotValid(playerUuid);
         }
     }
 
-    public Field[][] doTurn(String gameUuid, String playerUuid, Movement movement) {
-        gameData = gameDataService.getGameData(gameUuid, playerUuid);
-        if (currentMovementArray != null) {
-            if (Arrays.asList(currentMovementArray).contains(movement)) {
-                gameData = turnService.doTurn(gameData, movement);
-                Field[][] board = generateBoard(gameData, playerUuid);
-                if(IsInGamePeriod(gameData)) {
-                    gameData = updateTurn(gameData, playerUuid);
-                    gameDataService.updateGameData(gameData);
-                    return board;
+    public Field[][] doTurn(String gameDataUuid, String playerUuid, Movement movement) throws Exception {
+        try {
+            gameData = gameDataService.getGameData(gameDataUuid);
+        } catch (Exception ex) {
+            throw new GameDataIsNotAvailable(gameDataUuid);
+        }
+        if(isPlayerOnTurn(gameData, playerUuid)) {
+            if (currentMovementArray != null) {
+                if (Arrays.asList(currentMovementArray).contains(movement)) {
+                    gameData = turnService.doTurn(gameData, movement);
+                    Field[][] board = generateBoard(gameData, playerUuid);
+                    if(IsInGamePeriod(gameData)) {
+                        gameData = updateTurn(gameData, playerUuid);
+                        gameDataService.updateGameData(gameData);
+                        return board;
+                    } else {
+                        gameData = updateTurn(gameData, playerUuid);
+                        gameDataService.updateGameData(gameData);
+                        return board;
+                    }
                 } else {
-                    // Todo send message
-                    gameData = updateTurn(gameData, playerUuid);
-                    gameDataService.updateGameData(gameData);
-                    return board;
+                    throw new MovementIsNotValid(movement);
                 }
             } else {
-                // Todo throw Exception movement is not valid
-                return null;
+                throw new SequenceOfCommandsIsNotValid();
             }
         } else {
-            // Todo throw Exception not valid sequence of commands
-            return null;
+            throw new PlayerIsNotValid(playerUuid);
         }
     }
 
@@ -100,20 +127,19 @@ public class GameService {
         return gameData;
     }
 
-    private Piece getPieceOnThatPosition(GameData gameData, String position) {
-        Piece piece = gameData.getDicPosPiece().get(position);
+    private Piece getPieceOnThatPosition(GameData gameData, String position) throws NotValidPositionForPiece {
+        Piece piece = gameData.getMapPosPiece().get(position);
         if(piece != null) {
             return piece;
         } else {
-            // Todo throw Exception not valid position for a piece
-            return null;
+            throw new NotValidPositionForPiece(position);
         }
     }
 
     private GameData startGameIfAllPlayersConnected(GameData gameData) {
         if(gameData.isFirstPlayerConnected() && gameData.isSecondPlayerConnected()) {
-            var dicPosPiece = generateDicPosPiece();
-            gameData.setDicPosPiece(dicPosPiece);
+            var dicPosPiece = generateMapPosPiece();
+            gameData.setMapPosPiece(dicPosPiece);
             gameData.setTurnDate(new Date());
             gameData.setGamePeriodInMinute(GamePeriodInMinute);
         }
@@ -123,7 +149,7 @@ public class GameService {
     private Field[][] generateBoard(GameData gameData, String playerUuid) {
         boolean reverse = setIsReverse(gameData, playerUuid);
         int boardSize = 8;
-        Dictionary<Position, Piece> dicPosPiece = gameData.getDicPosPiece();
+        Map<Position, Piece> mapPosPiece = gameData.getMapPosPiece();
 
         Field[][] chessBoard = new Field[boardSize][boardSize];
         for (int y = 0; y < boardSize; y++) {
@@ -132,14 +158,17 @@ public class GameService {
             }
         }
         if(reverse) {
-            var reverseList = Collections.list(dicPosPiece.keys());
-            Collections.reverse(reverseList);
-            for(var entry : reverseList) {
-                chessBoard[entry.getPosY()][ entry.getPosX()] = new Field(dicPosPiece.get(entry), true);
+            List<Position> reversePositionList = new ArrayList<>();
+            reversePositionList.addAll(mapPosPiece.keySet());
+            Collections.reverse(reversePositionList);
+            for(var entry : reversePositionList) {
+                chessBoard[entry.getPosY()][ entry.getPosX()] = new Field(mapPosPiece.get(entry), true);
             }
         } else {
-            for (var entry : Collections.list(dicPosPiece.keys())) {
-                chessBoard[entry.getPosY()][entry.getPosX()] = new Field(dicPosPiece.get(entry), true);
+            List<Position> positionList = new ArrayList<>();
+            positionList.addAll(mapPosPiece.keySet());
+            for (var entry : positionList) {
+                chessBoard[entry.getPosY()][entry.getPosX()] = new Field(mapPosPiece.get(entry), true);
             }
         }
         return chessBoard;
@@ -148,7 +177,7 @@ public class GameService {
     private boolean setIsReverse(GameData gameData, String playerUuid) {
         boolean reverse;
         Color color;
-        if(gameData.getFirstPlayer().getPlayerUuid() == playerUuid) {
+        if(gameData.getFirstPlayer().getPlayerUuid().trim().equals(playerUuid)) {
             color = gameData.getColorFirstPlayer();
         } else {
             color = gameData.getColorSecondPlayer();
@@ -157,51 +186,55 @@ public class GameService {
         return reverse;
     }
 
-    private Dictionary<Position, Piece> generateDicPosPiece() {
-        // Todo create a smaller generate with reverse or so
-        Dictionary<Position, Piece> dicPosPiece = new Hashtable<>();
-        dicPosPiece.put(new Position(0,0), new Rock(Color.Black));
-        dicPosPiece.put(new Position(1,0), new Knight(Color.Black));
-        dicPosPiece.put(new Position(2,0), new Bishop(Color.Black));
-        dicPosPiece.put(new Position(3,0), new King(Color.Black));
-        dicPosPiece.put(new Position(4,0), new Queen(Color.Black));
-        dicPosPiece.put(new Position(5,0), new Bishop(Color.Black));
-        dicPosPiece.put(new Position(6,0), new Knight(Color.Black));
-        dicPosPiece.put(new Position(7,0), new Rock(Color.Black));
-        dicPosPiece.put(new Position(0,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(1,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(2,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(3,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(4,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(5,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(6,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(7,1), new Pawn(Color.Black));
-        dicPosPiece.put(new Position(0,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(1,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(2,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(3,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(4,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(5,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(6,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(7,6), new Pawn(Color.White));
-        dicPosPiece.put(new Position(0,7), new Rock(Color.White));
-        dicPosPiece.put(new Position(1,7), new Knight(Color.White));
-        dicPosPiece.put(new Position(2,7), new Bishop(Color.White));
-        dicPosPiece.put(new Position(3,7), new Queen(Color.White));
-        dicPosPiece.put(new Position(4,7), new King(Color.White));
-        dicPosPiece.put(new Position(5,7), new Bishop(Color.White));
-        dicPosPiece.put(new Position(6,7), new Knight(Color.White));
-        dicPosPiece.put(new Position(7,7), new Rock(Color.White));
-        return dicPosPiece;
+    private Piece getNewPiece(Color color, PieceType pieceType, Position position) {
+        switch (pieceType) {
+            case Pawn:
+                return new Pawn(color, position);
+            case Rock:
+                return new Rock(color, position);
+            case Knight:
+                return new Knight(color, position);
+            case Bishop:
+                return new Bishop(color, position);
+            case Queen:
+                return new Queen(color, position);
+            case King:
+                return new King(color, position);
+            default:
+                return null;
+        }
+    }
+
+    private Map<Position, Piece> generateMapPosPiece() {
+        Map<Position, Piece> mapPosPiece = new Hashtable<>();
+        PieceType[] listPieceType = { PieceType.Rock, PieceType.Knight, PieceType.Bishop, PieceType.King, PieceType.Queen, PieceType.Bishop, PieceType.Knight, PieceType.Rock };
+        for (int PosY = 0; PosY < 8; PosY++) {
+            for (int PosX = 0; PosX < 8; PosX++) {
+                if(PosY == 0) {
+                    mapPosPiece.put(new Position(PosX, PosY), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
+                } else if(PosX == 1) {
+                    mapPosPiece.put(new Position(PosX, PosY), new Pawn(Color.Black, new Position(PosX, PosY)));
+                } else if(PosY == 6) {
+                    mapPosPiece.put(new Position(PosX, PosY), getNewPiece(Color.White, listPieceType[PosX], new Position(PosX, PosY)));
+                } else if(PosX == 7) {
+                    mapPosPiece.put(new Position(PosX, PosY), new Pawn(Color.White, new Position(PosX, PosY)));
+                }
+            }
+        }
+        return mapPosPiece;
     }
 
     private GameData setIsPlayerConnected(GameData gameData, String playerUuid) {
-        if(gameData.getFirstPlayer().getPlayerUuid() == playerUuid) {
+        if(gameData.getFirstPlayer().getPlayerUuid().trim().equals(playerUuid)) {
             gameData.setFirstPlayerConnected(true);
         } else {
             gameData.setSecondPlayerConnected(true);
         }
         return gameData;
+    }
+
+    private boolean isPlayerOnTurn(GameData gameData, String currentPlayerUuid) {
+        return gameData.getCurrentPlayer().getPlayerUuid().trim().equals(currentPlayerUuid) ? true : false;
     }
 
     public void registerGameServer() {
