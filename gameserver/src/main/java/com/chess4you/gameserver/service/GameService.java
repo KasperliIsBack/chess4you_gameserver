@@ -146,7 +146,7 @@ public class GameService {
         return gameData;
     }
 
-    private Field[][] generateBoard(GameData gameData, String playerUuid) {
+    public Field[][] generateBoard(GameData gameData, String playerUuid) {
         boolean reverse = setIsReverse(gameData, playerUuid);
         int boardSize = 8;
         Map<Position, Piece> mapPosPiece = gameData.getMapPosPiece();

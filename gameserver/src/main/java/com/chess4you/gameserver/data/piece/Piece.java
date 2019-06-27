@@ -19,8 +19,7 @@ public abstract class Piece {
     private PieceType type;
     private DirectionType[] directions;
     public Piece(Color color, Position position){
-        pieceName = this.getClass().getCanonicalName() + color.toString();
-        pieceName = pieceName.substring(pieceName.lastIndexOf(".") + 1);
+        pieceName = this.getClass().getName() + color.toString();
         this.color = color;
         this.position = position;
     }
