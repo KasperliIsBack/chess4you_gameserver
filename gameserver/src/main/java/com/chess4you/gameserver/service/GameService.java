@@ -212,11 +212,11 @@ public class GameService {
             for (int PosX = 0; PosX < 8; PosX++) {
                 if(PosY == 0) {
                     mapPosPiece.put(new Position(PosX, PosY), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
-                } else if(PosX == 1) {
+                } else if(PosY == 1) {
                     mapPosPiece.put(new Position(PosX, PosY), new Pawn(Color.Black, new Position(PosX, PosY)));
                 } else if(PosY == 6) {
                     mapPosPiece.put(new Position(PosX, PosY), getNewPiece(Color.White, listPieceType[PosX], new Position(PosX, PosY)));
-                } else if(PosX == 7) {
+                } else if(PosY == 7) {
                     mapPosPiece.put(new Position(PosX, PosY), new Pawn(Color.White, new Position(PosX, PosY)));
                 }
             }
