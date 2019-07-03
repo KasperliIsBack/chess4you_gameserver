@@ -152,23 +152,23 @@ public class GameService {
         Map<Position, Piece> mapPosPiece = gameData.getMapPosPiece();
 
         Field[][] chessBoard = new Field[boardSize][boardSize];
-        for (int y = 0; y < boardSize; y++) {
-            for (int x = 0; x < boardSize; x++) {
-                chessBoard[y][x] = new Field(false);
+        for (int PosY = 0; PosY < boardSize; PosY++) {
+            for (int PosX = 0; PosX < boardSize; PosX++) {
+                chessBoard[PosY][PosX] = new Field(false);
             }
         }
         if(reverse) {
             List<Position> reversePositionList = new ArrayList<>();
             reversePositionList.addAll(mapPosPiece.keySet());
             Collections.reverse(reversePositionList);
-            for(var entry : reversePositionList) {
-                chessBoard[entry.getPosY()][ entry.getPosX()] = new Field(mapPosPiece.get(entry), true);
+            for(var position : reversePositionList) {
+                chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(position), true);
             }
         } else {
             List<Position> positionList = new ArrayList<>();
             positionList.addAll(mapPosPiece.keySet());
-            for (var entry : positionList) {
-                chessBoard[entry.getPosY()][entry.getPosX()] = new Field(mapPosPiece.get(entry), true);
+            for (var position : positionList) {
+                chessBoard[position.getPosY()][position.getPosX()] = new Field(mapPosPiece.get(position), true);
             }
         }
         return chessBoard;
@@ -205,7 +205,7 @@ public class GameService {
         }
     }
 
-    private Map<Position, Piece> generateMapPosPiece() {
+    public Map<Position, Piece> generateMapPosPiece() {
         Map<Position, Piece> mapPosPiece = new Hashtable<>();
         PieceType[] listPieceType = { PieceType.Rock, PieceType.Knight, PieceType.Bishop, PieceType.King, PieceType.Queen, PieceType.Bishop, PieceType.Knight, PieceType.Rock };
         for (int PosY = 0; PosY < 8; PosY++) {
