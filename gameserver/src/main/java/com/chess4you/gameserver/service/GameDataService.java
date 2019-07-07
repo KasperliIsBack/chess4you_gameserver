@@ -1,7 +1,7 @@
 package com.chess4you.gameserver.service;
 
-import com.chess4you.gameserver.data.GameData;
-import com.chess4you.gameserver.exceptionHandling.exception.GameDataIsNotAvailable;
+import com.chess4you.gameserver.data.game.GameData;
+import com.chess4you.gameserver.exceptionHandling.exception.GameDataNotAvailable;
 import com.chess4you.gameserver.repository.IGameDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,10 +23,10 @@ public class GameDataService {
             if(gameData.isPresent()) {
                 return gameData.get();
             } else {
-                throw new GameDataIsNotAvailable(gameDataUuid);
+                throw new GameDataNotAvailable(gameDataUuid);
             }
         } else {
-            throw new GameDataIsNotAvailable(gameDataUuid);
+            throw new GameDataNotAvailable(gameDataUuid);
         }
     }
 
@@ -34,7 +34,7 @@ public class GameDataService {
         if(gameDataRepository.existsById(gameData.getGameUuid())) {
             return gameDataRepository.save(gameData);
         } else {
-            throw new GameDataIsNotAvailable(gameData.getGameUuid());
+            throw new GameDataNotAvailable(gameData.getGameUuid());
         }
     }
 }

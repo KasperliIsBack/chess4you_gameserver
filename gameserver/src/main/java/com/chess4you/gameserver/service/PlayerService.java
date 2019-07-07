@@ -1,6 +1,6 @@
 package com.chess4you.gameserver.service;
 
-import com.chess4you.gameserver.data.Player;
+import com.chess4you.gameserver.data.game.Player;
 import com.chess4you.gameserver.repository.IPlayerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class TurnValidatorService {
 
     public boolean onStartPosition(Piece piece) {
-        switch (piece.getType()) {
+        switch (piece.getPieceType()) {
             case Pawn:
                 return piece.getPosition().getPosY() == 1
                         || piece.getPosition().getPosY() == 6;
@@ -48,7 +48,7 @@ public class TurnValidatorService {
                 if(mapPosPiece.get(position2).getColor() == piece.getColor()) {
                     return PositionType.Friendly;
                 } else {
-                    return PositionType.Enemeny;
+                    return PositionType.Enemy;
                 }
             }
         }
@@ -63,8 +63,7 @@ public class TurnValidatorService {
     }
 
     public boolean isRochadePossible(Map<Position, Piece> mapPosPiece, Piece piece) {
-        List<Position> listPosition =  new ArrayList<>();
-        listPosition.addAll(mapPosPiece.keySet());
+        List<Position> listPosition =  new ArrayList<>(mapPosPiece.keySet());
         listPosition.stream()
                 .filter(position ->
                     position.getPosY() == piece.getPosition().getPosY()

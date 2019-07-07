@@ -3,7 +3,6 @@ package com.chess4you.gameserver.service.turnvalidationservice;
 import com.chess4you.gameserver.data.enums.Color;
 import com.chess4you.gameserver.data.enums.PositionType;
 import com.chess4you.gameserver.data.movement.Position;
-import com.chess4you.gameserver.data.piece.Pawn;
 import com.chess4you.gameserver.data.piece.Piece;
 import com.chess4you.gameserver.service.TurnValidatorService;
 import org.junit.Assert;
@@ -60,7 +59,7 @@ public class TestTurnValidatorServiceOfMethodPieceOnPosition {
         PositionType actualPositionType = turnValidatorService.pieceOnPosition(listPosPiece,
                 new Position(6,1), pawn );
 
-        Assert.assertThat(actualPositionType, is(PositionType.Enemeny));
+        Assert.assertThat(actualPositionType, is(PositionType.Enemy));
     }
 
     @Test

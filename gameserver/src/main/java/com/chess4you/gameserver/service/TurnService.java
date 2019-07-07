@@ -1,16 +1,15 @@
 package com.chess4you.gameserver.service;
 
-import com.chess4you.gameserver.data.GameData;
-import com.chess4you.gameserver.data.enums.Color;
+import com.chess4you.gameserver.data.game.GameData;
 import com.chess4you.gameserver.data.enums.Direction;
 import com.chess4you.gameserver.data.enums.PieceType;
 import com.chess4you.gameserver.data.movement.*;
 import com.chess4you.gameserver.data.piece.Piece;
+import com.google.gson.Gson;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,12 +17,7 @@ import java.util.stream.Collectors;
 public class TurnService {
 
     private TurnValidatorService turnValidatorService;
-
-
-    private LinearMovement linearMovements = new LinearMovement();
-    private DiagonalMovement diagonalMovements = new DiagonalMovement();
-    private KnightMovement knightMovements = new KnightMovement();
-    private RochadeMovement rochadeMovement = new RochadeMovement();
+    private MovementOperation movementOperation = new MovementOperation();
 
     @Autowired
     public TurnService(TurnValidatorService turnValidatorService) {
@@ -31,31 +25,28 @@ public class TurnService {
 
     }
 
-    public Movement[] getPossibleTurnFor(Map<Position, Piece> mapPosPiece, Piece pieceOnThatPosition) {
+    public Movement[] getPossibleTurnFor(Map<Position, Piece> mapPosPiece, Piece pieceOnThatPosition, boolean reverse) {
         var tmpMovements = new ArrayList<Movement>();
-        for (int i = 0; i < pieceOnThatPosition.getDirections().length; i++) {
-            switch (pieceOnThatPosition.getDirections()[i]) {
+        for(var directionsType : pieceOnThatPosition.getDirectionTypes()) {
+            switch (directionsType) {
                 case Linear:
-                    try {
-                        tmpMovements.addAll(linearMovements(mapPosPiece, pieceOnThatPosition));
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
+                    tmpMovements.addAll(linearMovements(mapPosPiece, pieceOnThatPosition, reverse));
                     break;
                 case Diagonal:
-                    tmpMovements.addAll(diagonalMovements(mapPosPiece, pieceOnThatPosition));
+                    tmpMovements.addAll(diagonalMovements(mapPosPiece, pieceOnThatPosition, reverse));
                     break;
                 case Pawn:
-                    tmpMovements.addAll(enPasseMovements(mapPosPiece, pieceOnThatPosition));
+                    tmpMovements.addAll(enPasseMovements(mapPosPiece, pieceOnThatPosition, reverse));
                     break;
                 case Knight:
-                    tmpMovements.addAll(knightMovements(mapPosPiece, pieceOnThatPosition));
+                    tmpMovements.addAll(knightMovements(mapPosPiece, pieceOnThatPosition, reverse));
                     break;
                 case Rochade:
-                    tmpMovements.addAll(rochadeMovements(mapPosPiece, pieceOnThatPosition));
+                    tmpMovements.addAll(rochadeMovements(mapPosPiece, pieceOnThatPosition, reverse));
             }
         }
-        return tmpMovements.stream().toArray(Movement[]::new);
+        Movement[] movements = tmpMovements.stream().toArray(Movement[]::new);
+        return movements;
     }
 
     public GameData doTurn(GameData gameData, Movement movement) {
@@ -65,15 +56,15 @@ public class TurnService {
             mapPosPiece.remove(movement.getNewPosition());
         }
 
-        mapPosPiece.put(movement.getNewPosition(), piece);
+        mapPosPiece.put(new Gson().toJson(movement.getNewPosition()), piece);
         gameData.setMapPosPiece(mapPosPiece);
         return gameData;
     }
 
-    private List<Movement> rochadeMovements(Map<Position, Piece> mapPosPiece, Piece piece) {
+    private List<Movement> rochadeMovements(Map<Position, Piece> mapPosPiece, Piece piece, boolean reverse) {
         var tmp = new ArrayList<Movement>();
         if(turnValidatorService.isRochadePossible(mapPosPiece, piece)) {
-            List<Position> listPiece =  new ArrayList<>();
+            List<Position> listPiece =  new ArrayList<>(mapPosPiece.keySet());
             listPiece.addAll(mapPosPiece.keySet());
             listPiece.stream()
                     .filter(position ->
@@ -84,19 +75,20 @@ public class TurnService {
             var rock = mapPosPiece.get(listPiece.get(0));
             switch (turnValidatorService.rochadeType(mapPosPiece, piece)) {
                 case smallRochade:
-                    tmp.addAll(Arrays.asList(rochadeMovement.smallRochade(piece.getPosition(), rock.getPosition())));
+                    tmp.addAll(Arrays.asList(movementOperation.smallRochade(piece.getPosition(), rock.getPosition())));
                     break;
                 case bigRochade:
-                    tmp.addAll(Arrays.asList(rochadeMovement.bigRochade(piece.getPosition(), rock.getPosition())));
+                    tmp.addAll(Arrays.asList(movementOperation.bigRochade(piece.getPosition(), rock.getPosition())));
                     break;
             }
         }
         return tmp;
     }
 
-    public List<Movement> diagonalMovements(Map<Position, Piece> mapPosPiece, Piece piece) {
+
+    public List<Movement> diagonalMovements(Map<Position, Piece> mapPosPiece, Piece piece, boolean reverse) {
         int number;
-        switch (piece.getType()){
+        switch (piece.getPieceType()){
             case King:
                 number = 1;
                 break;
@@ -105,19 +97,15 @@ public class TurnService {
                 break;
         }
         var tmp = new ArrayList<Movement>();
-        for(var method : diagonalMovements.getClass().getMethods()){
-            if(method.getReturnType() == Movement.class) {
-                tmp.addAll(movementsGeneral(diagonalMovements, method, 0, number, mapPosPiece, piece, new ArrayList<>()));
-            } else {
-                break;
-            }
+        for(Direction direction : piece.getDirections()) {
+            tmp.addAll(movementsGeneral(direction, 0, number, reverse, mapPosPiece, piece, new ArrayList<>()));
         }
         return tmp;
     }
 
-    public List<Movement> linearMovements(Map<Position, Piece> mapPosPiece, Piece piece) throws NoSuchMethodException {
+    public List<Movement> linearMovements(Map<Position, Piece> mapPosPiece, Piece piece, boolean reverse) {
         int number;
-        switch (piece.getType()){
+        switch (piece.getPieceType()){
             case King:
                 number = 1;
                 break;
@@ -129,102 +117,68 @@ public class TurnService {
                 break;
         }
         var tmp = new ArrayList<Movement>();
-        if(piece.getType() == PieceType.Pawn) {
-            tmp.addAll(movementsGeneral(linearMovements, linearMovements.getClass().getMethod("F", Position.class, int.class), 0, number, mapPosPiece, piece, new ArrayList<>()));
-        } else {
-            for(var method : linearMovements.getClass().getMethods()){
-                if(method.getReturnType() == Movement.class) {
-                    tmp.addAll(movementsGeneral(linearMovements, method, 0, number, mapPosPiece, piece, new ArrayList<>()));
-                } else {
-                    break;
-                }
+        for(Direction direction : piece.getDirections()) {
+            tmp.addAll(movementsGeneral(direction, 0, number, reverse, mapPosPiece, piece, new ArrayList<>()));
+        }
+        return tmp;
+    }
+
+    private List<Movement> enPasseMovements(Map<Position, Piece> mapPosPiece, Piece piece, boolean reverse){
+        var tmp = new ArrayList<Movement>();
+        for(Direction direction : piece.getDirections()) {
+            switch (direction) {
+                case FLEnPasse:
+                case FREnPasse:
+                    if(turnValidatorService.isEnPassePossible(mapPosPiece, piece)) {
+                        Movement movement = movementOperation.move(direction, piece.getPosition(), 1, reverse);
+                        var type = turnValidatorService.pieceOnPosition(mapPosPiece, movement.getNewPosition(), piece);
+                        switch (type) {
+                            case Friendly:
+                                break;
+                            case Enemy:
+                            case Nothing:
+                                tmp.add(movement);
+                        }
+                        break;
+                    }
             }
         }
         return tmp;
     }
 
-    public List<Movement> enPasseMovements(Map<Position, Piece> mapPosPiece, Piece piece){
-        List<Position> tmpPositions =  new ArrayList<>();
-        tmpPositions.addAll(mapPosPiece.keySet());
-        List<Movement> tmpMovements = new ArrayList<Movement>();
-        Position posForwardLeft;
-        Position posForwardRight;
-        if(piece.getColor() == Color.Black) {
-            posForwardLeft = new Position(piece.getPosition().getPosX() - 1, piece.getPosition().getPosY() + 1);
-            posForwardRight = new Position(piece.getPosition().getPosX() + 1, piece.getPosition().getPosY());
-
-        } else {
-            posForwardLeft = new Position(piece.getPosition().getPosX() - 1, piece.getPosition().getPosY() - 1);
-            posForwardRight = new Position(piece.getPosition().getPosX() + 1, piece.getPosition().getPosY());
-        }
-        if(turnValidatorService.isEnPassePossible(mapPosPiece, piece)) {
-            if(turnValidatorService.containsPosition(tmpPositions, posForwardLeft)) {
-                var type = turnValidatorService.pieceOnPosition(mapPosPiece, posForwardLeft, piece);
-                switch (type) {
-                    case Friendly:
-                        break;
-                    case Enemeny:
-                    case Nothing:
-                        tmpMovements.add(new Movement(posForwardLeft, piece.getPosition(), Direction.FLEnPasse));
-                }
-            } else if(turnValidatorService.containsPosition(tmpPositions, posForwardRight)) {
-                var type = turnValidatorService.pieceOnPosition(mapPosPiece, posForwardRight, piece);
-                switch (type) {
-                    case Friendly:
-                        break;
-                    case Enemeny:
-                    case Nothing:
-                        tmpMovements.add(new Movement(posForwardRight, piece.getPosition(), Direction.FREnPasse));
-                }
-            }
-        }
-        return tmpMovements;
-    }
-
-    public List<Movement> knightMovements(Map<Position, Piece> mapPosPiece, Piece piece) {
+    public List<Movement> knightMovements(Map<Position, Piece> mapPosPiece, Piece piece, boolean reverse) {
         int number = 1;
         var tmp = new ArrayList<Movement>();
-        for(var method : knightMovements.getClass().getMethods()){
-            if(method.getReturnType() == Movement.class) {
-                tmp.addAll(movementsGeneral(diagonalMovements, method, 0, number, mapPosPiece, piece, new ArrayList<>()));
-            } else {
-                break;
-            }
+        for(Direction direction : piece.getDirections()) {
+            tmp.addAll(movementsGeneral(direction, 0, number, reverse, mapPosPiece, piece, new ArrayList<>()));
         }
         return tmp;
     }
 
-    public List<Movement> movementsGeneral(Object instance, Method method, int counter, int number, Map<Position, Piece> mapPosPiece, Piece piece, List<Movement> listMovements){
+    private List<Movement> movementsGeneral(Direction direction, int counter, int number, boolean reverse, Map<Position, Piece> mapPosPiece, Piece piece, List<Movement> listMovementData){
         counter = counter == 0 ? 1 : counter;
-        try{
-            Object tmp = number == 0 ? method.invoke(instance, piece.getPosition()) :
-                    method.invoke(instance, piece.getPosition(), counter);
-            Movement movement = (Movement) tmp;
-           var type = turnValidatorService.pieceOnPosition(mapPosPiece, movement.getNewPosition(), piece);
-            switch (type) {
-                case Friendly:
-                    return listMovements;
-                case Enemeny:
-                    if(piece.getType() == PieceType.Pawn) {
-                        return listMovements;
-                    } else {
-                        listMovements.add(movement);
-                        return listMovements;
+        Movement movement = movementOperation.move(direction, piece.getPosition(), counter, reverse);
+        var type = turnValidatorService.pieceOnPosition(mapPosPiece, movement.getNewPosition(), piece);
+        switch (type) {
+            case Friendly:
+                return listMovementData;
+            case Enemy:
+                if(piece.getPieceType() == PieceType.Pawn) {
+                    return listMovementData;
+                } else {
+                    listMovementData.add(movement);
+                    return listMovementData;
+                }
+            case Nothing:
+                if(turnValidatorService.possibleMovementOnBoard(movement)) {
+                    listMovementData.add(movement);
+                    if(counter < number){
+                        movementsGeneral(direction, ++counter, number, reverse, mapPosPiece, piece, listMovementData);
                     }
-                case Nothing:
-                    if(turnValidatorService.possibleMovementOnBoard(movement)) {
-                        listMovements.add(movement);
-                        if(counter < number){
-                            movementsGeneral(instance, method, ++counter, number, mapPosPiece, piece, listMovements);
-                        }
-                        return listMovements;
-                    }
-                    return  listMovements;
-            }
-            return listMovements;
-        } catch (Exception e) {
-            System.out.println("Error: " + e);
-            return null;
+                    return listMovementData;
+                }
+                return listMovementData;
         }
+        return listMovementData;
     }
 }

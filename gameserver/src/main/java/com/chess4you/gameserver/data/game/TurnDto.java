@@ -1,5 +1,6 @@
-package com.chess4you.gameserver.data;
+package com.chess4you.gameserver.data.game;
 
+import com.chess4you.gameserver.data.game.ConnectionData;
 import com.chess4you.gameserver.data.movement.Movement;
 import lombok.Data;
 

@@ -1,6 +1,6 @@
 package com.chess4you.gameserver.handler;
 
-import com.chess4you.gameserver.data.GameData;
+import com.chess4you.gameserver.data.game.GameData;
 import com.chess4you.gameserver.data.board.Field;
 import com.chess4you.gameserver.data.movement.Movement;
 import com.chess4you.gameserver.service.GameService;
@@ -22,12 +22,11 @@ public class GameHandler {
     }
 
     public String connect(String gameDataUuid, String playerUuid) throws Exception {
-        String message = gameService.connect(gameDataUuid, playerUuid);
-        return message;
+        return gameService.connect(gameDataUuid, playerUuid);
     }
 
-    public String getInfo(String gameDataUuid, String playerUuid) throws Exception {
-        GameData gameData = gameService.getInfo(gameDataUuid, playerUuid);
+    public String getInfo(String gameDataUuid) throws Exception {
+        GameData gameData = gameService.getInfo(gameDataUuid);
         return gson.toJson(gameData);
     }
 

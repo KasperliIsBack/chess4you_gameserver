@@ -1,4 +1,4 @@
-package com.chess4you.gameserver.data;
+package com.chess4you.gameserver.data.game;
 
 import lombok.Data;
 

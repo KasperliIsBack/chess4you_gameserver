@@ -1,10 +1,7 @@
 package com.chess4you.gameserver.service.turnvalidationservice;
 
 import com.chess4you.gameserver.data.movement.Position;
-import com.chess4you.gameserver.data.piece.King;
-import com.chess4you.gameserver.data.piece.Pawn;
 import com.chess4you.gameserver.data.piece.Piece;
-import com.chess4you.gameserver.data.piece.Rock;
 import com.chess4you.gameserver.service.TurnValidatorService;
 import org.junit.Assert;
 import org.junit.Test;

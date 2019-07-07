@@ -1,17 +1,24 @@
 package com.chess4you.gameserver.service;
 
-import com.chess4you.gameserver.data.GameData;
+import com.chess4you.gameserver.data.game.GameData;
 import com.chess4you.gameserver.data.board.Field;
 import com.chess4you.gameserver.data.enums.Color;
 import com.chess4you.gameserver.data.enums.PieceType;
 import com.chess4you.gameserver.data.movement.Movement;
 import com.chess4you.gameserver.data.movement.Position;
-import com.chess4you.gameserver.data.piece.*;
+import com.chess4you.gameserver.data.piece.Piece;
+import com.chess4you.gameserver.data.piece.PieceProperties;
 import com.chess4you.gameserver.exceptionHandling.exception.*;
+import com.google.gson.Gson;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Service
@@ -23,7 +30,6 @@ public class GameService {
     private GameData gameData;
     private Movement[] currentMovementArray;
     private final int GamePeriodInMinute = 10;
-
     @Autowired
     public GameService(TurnService turnService, GameDataService gameDataService, GameServerService gameServerService){
         this.turnService = turnService;
@@ -32,59 +38,44 @@ public class GameService {
     }
 
     public String connect(String gameDataUuid, String playerUuid) throws Exception {
-        try {
-            gameData = gameDataService.getGameData(gameDataUuid);
-        } catch (Exception ex) {
-            throw new GameDataIsNotAvailable(gameDataUuid);
-        }
+        gameData = getGameData(gameDataUuid);
         gameData = setIsPlayerConnected(gameData, playerUuid);
         gameData = startGameIfAllPlayersConnected(gameData);
         gameDataService.updateGameData(gameData);
         return "Connection was successful";
     }
 
-    public GameData getInfo(String gameDataUuid, String playerUuid) throws Exception {
-        try {
-            gameData = gameDataService.getGameData(gameDataUuid);
-        } catch (Exception ex) {
-            throw new GameDataIsNotAvailable(gameDataUuid);
-        }
+    public GameData getInfo(String gameDataUuid) throws Exception {
+        gameData = getGameData(gameDataUuid);
         return gameData;
     }
 
     public Field[][] getBoard(String gameDataUuid, String playerUuid) throws Exception {
-        try {
-            gameData = gameDataService.getGameData(gameDataUuid);
-        } catch (Exception ex) {
-            throw new GameDataIsNotAvailable(gameDataUuid);
-        }
+        gameData = getGameData(gameDataUuid);
         return generateBoard(gameData, playerUuid);
     }
 
     public Movement[] getTurn(String gameDataUuid, String playerUuid, String position) throws Exception {
-        try {
-            gameData = gameDataService.getGameData(gameDataUuid);
-        } catch (Exception ex) {
-            throw new GameDataIsNotAvailable(gameDataUuid);
-        }
+        gameData = getGameData(gameDataUuid);
         if(isPlayerOnTurn(gameData, playerUuid)) {
-            currentMovementArray = turnService.getPossibleTurnFor(gameData.getMapPosPiece(), getPieceOnThatPosition(gameData, position));
+            Map<Position, Piece> mapPosPiece = new HashMap<>();
+            for (var tmpPiece : gameData.getMapPosPiece().values()) {
+                mapPosPiece.put(tmpPiece.getPosition(), tmpPiece);
+            }
+            var piece = getPieceOnThatPosition(gameData, position);
+            currentMovementArray = turnService.getPossibleTurnFor(mapPosPiece, piece, setIsReverse(gameData, playerUuid));
             if(IsInGamePeriod(gameData)) {
                 return currentMovementArray;
             } else {
                 return currentMovementArray;
             }
         } else {
-            throw new PlayerIsNotValid(playerUuid);
+            throw new PlayerUuidNotValid(playerUuid);
         }
     }
 
     public Field[][] doTurn(String gameDataUuid, String playerUuid, Movement movement) throws Exception {
-        try {
-            gameData = gameDataService.getGameData(gameDataUuid);
-        } catch (Exception ex) {
-            throw new GameDataIsNotAvailable(gameDataUuid);
-        }
+        gameData = getGameData(gameDataUuid);
         if(isPlayerOnTurn(gameData, playerUuid)) {
             if (currentMovementArray != null) {
                 if (Arrays.asList(currentMovementArray).contains(movement)) {
@@ -103,10 +94,10 @@ public class GameService {
                     throw new MovementIsNotValid(movement);
                 }
             } else {
-                throw new SequenceOfCommandsIsNotValid();
+                throw new SequenceOfCommandsNotValid();
             }
         } else {
-            throw new PlayerIsNotValid(playerUuid);
+            throw new PlayerNotOnTheMove(playerUuid);
         }
     }
 
@@ -118,7 +109,7 @@ public class GameService {
     }
 
     private GameData updateTurn(GameData gameData, String playerUuid) {
-        if(gameData.getFirstPlayer().getPlayerUuid() == playerUuid) {
+        if(gameData.getFirstPlayer().getPlayerUuid().equals(playerUuid)) {
             gameData.setCurrentPlayer(gameData.getSecondPlayer());
         } else {
             gameData.setCurrentPlayer(gameData.getFirstPlayer());
@@ -127,16 +118,17 @@ public class GameService {
         return gameData;
     }
 
-    private Piece getPieceOnThatPosition(GameData gameData, String position) throws NotValidPositionForPiece {
-        Piece piece = gameData.getMapPosPiece().get(position);
+    private Piece getPieceOnThatPosition(GameData gameData, String position) throws PositionNotValid {
+        var mapPosPiece = gameData.getMapPosPiece();
+        var piece = mapPosPiece.get(position);
         if(piece != null) {
             return piece;
         } else {
-            throw new NotValidPositionForPiece(position);
+            throw new PositionNotValid(new Gson().toJson(position));
         }
     }
 
-    private GameData startGameIfAllPlayersConnected(GameData gameData) {
+    private GameData startGameIfAllPlayersConnected(GameData gameData) throws IOException, URISyntaxException {
         if(gameData.isFirstPlayerConnected() && gameData.isSecondPlayerConnected()) {
             var dicPosPiece = generateMapPosPiece();
             gameData.setMapPosPiece(dicPosPiece);
@@ -146,10 +138,10 @@ public class GameService {
         return gameData;
     }
 
-    public Field[][] generateBoard(GameData gameData, String playerUuid) {
+    private Field[][] generateBoard(GameData gameData, String playerUuid) {
         boolean reverse = setIsReverse(gameData, playerUuid);
         int boardSize = 8;
-        Map<Position, Piece> mapPosPiece = gameData.getMapPosPiece();
+        Map<String, Piece> mapPosPiece = gameData.getMapPosPiece();
 
         Field[][] chessBoard = new Field[boardSize][boardSize];
         for (int PosY = 0; PosY < boardSize; PosY++) {
@@ -157,22 +149,17 @@ public class GameService {
                 chessBoard[PosY][PosX] = new Field(false);
             }
         }
+        List<String> posList = new ArrayList<>(mapPosPiece.keySet());
         if(reverse) {
-            List<Position> reversePositionList = new ArrayList<>();
-            reversePositionList.addAll(mapPosPiece.keySet());
-            Collections.reverse(reversePositionList);
-            for(var position : reversePositionList) {
-                chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(position), true);
-            }
-        } else {
-            List<Position> positionList = new ArrayList<>();
-            positionList.addAll(mapPosPiece.keySet());
-            for (var position : positionList) {
-                chessBoard[position.getPosY()][position.getPosX()] = new Field(mapPosPiece.get(position), true);
-            }
+            Collections.reverse(posList);
+        }
+        for(var tmpPosition : posList) {
+            var position = mapPosPiece.get(tmpPosition).getPosition();
+            chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
         }
         return chessBoard;
     }
+
 
     private boolean setIsReverse(GameData gameData, String playerUuid) {
         boolean reverse;
@@ -186,38 +173,27 @@ public class GameService {
         return reverse;
     }
 
-    private Piece getNewPiece(Color color, PieceType pieceType, Position position) {
-        switch (pieceType) {
-            case Pawn:
-                return new Pawn(color, position);
-            case Rock:
-                return new Rock(color, position);
-            case Knight:
-                return new Knight(color, position);
-            case Bishop:
-                return new Bishop(color, position);
-            case Queen:
-                return new Queen(color, position);
-            case King:
-                return new King(color, position);
-            default:
-                return null;
-        }
+    private Piece getNewPiece(Color color, PieceType pieceType, Position position) throws URISyntaxException, IOException {
+        Path path = Paths.get(getClass().getResource(String.format("%s.json", pieceType.name())).toURI());
+        String rawData = new String(Files.readAllBytes(path));
+        var pieceProperties = new Gson().fromJson(rawData, PieceProperties.class);
+        return new Piece(pieceType, pieceProperties.getDirections(), pieceProperties.getDirectionTypes(), color, position);
     }
 
-    public Map<Position, Piece> generateMapPosPiece() {
-        Map<Position, Piece> mapPosPiece = new Hashtable<>();
+    private Map<String, Piece> generateMapPosPiece() throws IOException, URISyntaxException {
+        var gson = new Gson();
+        Map<String, Piece> mapPosPiece = new Hashtable<>();
         PieceType[] listPieceType = { PieceType.Rock, PieceType.Knight, PieceType.Bishop, PieceType.King, PieceType.Queen, PieceType.Bishop, PieceType.Knight, PieceType.Rock };
         for (int PosY = 0; PosY < 8; PosY++) {
             for (int PosX = 0; PosX < 8; PosX++) {
                 if(PosY == 0) {
-                    mapPosPiece.put(new Position(PosX, PosY), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
+                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
                 } else if(PosY == 1) {
-                    mapPosPiece.put(new Position(PosX, PosY), new Pawn(Color.Black, new Position(PosX, PosY)));
+                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
                 } else if(PosY == 6) {
-                    mapPosPiece.put(new Position(PosX, PosY), new Pawn(Color.White, new Position(PosX, PosY)));
+                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
                 } else if(PosY == 7) {
-                    mapPosPiece.put(new Position(PosX, PosY), getNewPiece(Color.White, listPieceType[PosX], new Position(PosX, PosY)));
+                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.White, listPieceType[PosX], new Position(PosX, PosY)));
                 }
             }
         }
@@ -234,10 +210,20 @@ public class GameService {
     }
 
     private boolean isPlayerOnTurn(GameData gameData, String currentPlayerUuid) {
-        return gameData.getCurrentPlayer().getPlayerUuid().trim().equals(currentPlayerUuid) ? true : false;
+        return gameData.getCurrentPlayer().getPlayerUuid().equals(currentPlayerUuid);
     }
 
     public void registerGameServer() {
         gameServerService.registerGameServer();
+    }
+
+    private GameData getGameData(String gameDataUuid) throws GameDataNotAvailable {
+        GameData tmpGameData;
+        try {
+            tmpGameData = gameDataService.getGameData(gameDataUuid);
+        } catch (Exception ex){
+            throw new GameDataNotAvailable(gameDataUuid);
+        }
+        return tmpGameData;
     }
 }

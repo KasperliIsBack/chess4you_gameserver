@@ -1,8 +1,8 @@
 package com.chess4you.gameserver.controller;
 
-import com.chess4you.gameserver.data.ConnectionData;
-import com.chess4you.gameserver.data.TurnDto;
-import com.chess4you.gameserver.exceptionHandling.exception.InvalidJsonObjectException;
+import com.chess4you.gameserver.data.game.ConnectionData;
+import com.chess4you.gameserver.data.game.TurnDto;
+import com.chess4you.gameserver.exceptionHandling.exception.JsonParseError;
 import com.chess4you.gameserver.handler.GameHandler;
 import com.google.gson.Gson;
 import io.swagger.annotations.Api;
@@ -36,7 +36,7 @@ public class GameController {
         try {
             cnData = gson.fromJson(rawCnData, ConnectionData.class);
         } catch (Exception ex){
-            throw new InvalidJsonObjectException(rawCnData);
+            throw new JsonParseError(rawCnData);
         }
         return gameServerHandler.connect(cnData.getGameDataUuid(), cnData.getPlayerUuid());
     }
@@ -47,7 +47,7 @@ public class GameController {
     @ApiOperation("Get a Info Object by their specific uuid from the lobby")
     String getInfo(@ApiParam("The uuid of the lobby. Cannot be null!") @RequestParam("gameUuid") String gameDataUuid,
                    @ApiParam("The uuid of the player. Cannot be null!") @RequestParam("playerUuid") String playerUuid) throws Exception{
-        return gameServerHandler.getInfo(gameDataUuid, playerUuid);
+        return gameServerHandler.getInfo(gameDataUuid);
     }
 
     @CrossOrigin(origins = origin)
@@ -62,10 +62,10 @@ public class GameController {
     @CrossOrigin(origins = origin)
     @GetMapping("/getTurn")
     @ResponseBody
-    @ApiOperation("Get a List of possible movements by the uuid from the lobby and Player and the Position")
+    @ApiOperation("Get a List of possible movement by the uuid from the lobby and Player and the Position")
     String getTurn(@ApiParam("The uuid of the lobby. Cannot be null!") @RequestParam("gameUuid") String gameDataUuid,
                    @ApiParam("The uuid of the lobby. Cannot be null!") @RequestParam("playerUuid") String playerUuid,
-                   @ApiParam("The serialized Position Object. Cannot be null!") @RequestParam("position")String position) throws Exception{
+                   @ApiParam("The serialized Position Object. Cannot be null!") @RequestParam("position")String position) throws Exception {
         return gameServerHandler.getTurn(gameDataUuid, playerUuid, position);
     }
 
@@ -78,7 +78,7 @@ public class GameController {
         try {
             turnDto = gson.fromJson(rawTurnDto, TurnDto.class);
         } catch (Exception ex) {
-            throw new InvalidJsonObjectException(rawTurnDto);
+            throw new JsonParseError(rawTurnDto);
         }
         return gameServerHandler.doTurn(turnDto.getCnData().getGameDataUuid(), turnDto.getCnData().getPlayerUuid(), turnDto.getMovement());
     }
