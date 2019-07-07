@@ -1,6 +1,6 @@
 package com.chess4you.gameserver.exceptionHandling;
 
-import com.chess4you.gameserver.exceptionHandling.exception.NotValidPositionForPiece;
+import com.chess4you.gameserver.exceptionHandling.exception.MovementIsNotValid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
-public class NotValidPositionForPieceAdvice {
+public class MovementNotValidAdvice {
     @ResponseBody
-    @ExceptionHandler(NotValidPositionForPiece.class)
+    @ExceptionHandler(MovementIsNotValid.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    String NotValidPositionForPieceAdvice(NotValidPositionForPiece ex){
+    String MovementIsNotValidAdvice(MovementIsNotValid ex){
         return ex.getMessage();
     }
 }

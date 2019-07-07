@@ -1,6 +1,6 @@
 package com.chess4you.gameserver.exceptionHandling;
 
-import com.chess4you.gameserver.exceptionHandling.exception.SequenceOfCommandsIsNotValid;
+import com.chess4you.gameserver.exceptionHandling.exception.PositionNotValid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ControllerAdvice
-public class SequenceOfCommandsIsNotValidAdvice {
+public class PositionNotValidAdvice {
     @ResponseBody
-    @ExceptionHandler(SequenceOfCommandsIsNotValid.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    String SequenceOfCommandsIsNotValidAdvice(SequenceOfCommandsIsNotValid ex){
+    @ExceptionHandler(PositionNotValid.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    String NotValidPositionForPieceAdvice(PositionNotValid ex){
         return ex.getMessage();
     }
 }
