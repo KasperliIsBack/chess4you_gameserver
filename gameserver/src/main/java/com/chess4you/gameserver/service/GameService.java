@@ -32,7 +32,7 @@ public class GameService {
     private Movement[] currentMovementArray;
     private final int GamePeriodInMinute = 10;
     @Autowired
-    public GameService(TurnService turnService, GameDataService gameDataService, GameServerService gameServerService){
+    public GameService(TurnService turnService, TurnValidatorService turnValidatorService, GameDataService gameDataService, GameServerService gameServerService){
         this.turnService = turnService;
         this.gameDataService = gameDataService;
         this.gameServerService = gameServerService;
@@ -79,7 +79,7 @@ public class GameService {
         gameData = getGameData(gameDataUuid);
         if(isPlayerOnTurn(gameData, playerUuid)) {
             if (currentMovementArray != null) {
-                if (Arrays.asList(currentMovementArray).contains(movement)) {
+                if (containsMovement(Arrays.asList(currentMovementArray), movement)) {
                     gameData = turnService.doTurn(gameData, movement);
                     Field[][] board = generateBoard(gameData, playerUuid);
                     if(IsInGamePeriod(gameData)) {
@@ -100,6 +100,19 @@ public class GameService {
         } else {
             throw new PlayerNotOnTheMove(playerUuid);
         }
+    }
+
+    private boolean containsMovement(List<Movement> movementList, Movement testMovement) {
+        for (var movement : movementList) {
+            if(movement.getNewPosition().getPosX() == testMovement.getNewPosition().getPosX()
+            && movement.getNewPosition().getPosY() == testMovement.getNewPosition().getPosY()
+            && movement.getOldPosition().getPosX() == testMovement.getOldPosition().getPosX()
+            && movement.getOldPosition().getPosY() == testMovement.getOldPosition().getPosY()
+            && movement.getDirection().toString() == testMovement.getDirection().toString()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean IsInGamePeriod(GameData gameData) {
@@ -154,12 +167,12 @@ public class GameService {
         if(reverse) {
             for(var tmpPosition : posList) {
                 var position = mapPosPiece.get(tmpPosition).getPosition();
-                chessBoard[7 - position.getPosY()][7 -  position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
+                chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
             }
         } else {
             for(var tmpPosition : posList) {
                 var position = mapPosPiece.get(tmpPosition).getPosition();
-                chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
+                chessBoard[7 - position.getPosY()][7 -  position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
             }
         }
         return chessBoard;

@@ -31,7 +31,16 @@ public class TurnService {
         for(var direction : pieceOnThatPosition.getDirections()) {
             tmpMovements.addAll(movementsGeneral(mapPosPiece, tmpMovements, pieceOnThatPosition, direction, reverse, 0, distance ));
         }
-        Movement[] movements = tmpMovements.stream().toArray(Movement[]::new);
+        List<Movement> filteredMovements = new ArrayList<>();
+        List<String> filteredMovementsString = new ArrayList<>();
+        var gson = new Gson();
+        for (var movement : tmpMovements) {
+            if(!filteredMovementsString.contains(gson.toJson(movement))) {
+                filteredMovements.add(movement);
+                filteredMovementsString.add(gson.toJson(movement));
+            }
+        }
+        Movement[] movements = filteredMovements.stream().toArray(Movement[]::new);
         return movements;
     }
 
@@ -48,9 +57,9 @@ public class TurnService {
 
     public GameData doTurn(GameData gameData, Movement movement) {
         var mapPosPiece = gameData.getMapPosPiece();
-        var piece = mapPosPiece.get(movement.getOldPosition());
-        if(mapPosPiece.containsKey(movement.getNewPosition())) {
-            mapPosPiece.remove(movement.getNewPosition());
+        var piece = mapPosPiece.get(new Gson().toJson(movement.getOldPosition()));
+        if(mapPosPiece.containsKey(new Gson().toJson(movement.getOldPosition()))) {
+            mapPosPiece.remove(new Gson().toJson(movement.getNewPosition()));
         }
 
         mapPosPiece.put(new Gson().toJson(movement.getNewPosition()), piece);
@@ -58,8 +67,8 @@ public class TurnService {
         return gameData;
     }
 
-    private List<Movement> movementsGeneral(Map<Position, Piece> mapPosPiece, List<Movement> movementList, Piece piece, Direction direction, boolean reverse, int counter, int distance){
-        counter = counter == 0 ? 1 : counter;
+    private List<Movement> movementsGeneral(Map<Position, Piece> mapPosPiece, List<Movement> movementList, Piece piece, Direction direction, boolean reverse, int distance, int maxDistance){
+        distance = distance == 0 ? 1 : distance;
 
         if(isSpecialMovement(direction)) {
             return checkSpecialMovement(movementList);
@@ -80,8 +89,8 @@ public class TurnService {
             case Nothing:
                 if(turnValidatorService.possibleMovementOnBoard(movement)) {
                     movementList.add(movement);
-                    if(counter < distance){
-                        movementsGeneral(mapPosPiece, movementList, piece, direction, reverse, counter, distance);
+                    if(distance > maxDistance + 1){
+                        movementsGeneral(mapPosPiece, movementList, piece, direction, reverse, ++distance, maxDistance);
                     }
                     return movementList;
                 }
