@@ -1,11 +1,6 @@
-{
-    "DirectionType": [
-        2
-    ],
-    "Direction": [
-        10,
-        11,
-        12
-        13
-    ]
-}
+[
+    "FLKnight",
+    "FRKnight",
+    "BLKnight",
+    "BRKnight"
+]

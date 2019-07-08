@@ -1,11 +1,6 @@
-{
-    "DirectionType": [
-        1
-    ],
-    "Direction": [
-        6,
-        7,
-        8,
-        9
-    ]
-}
+[
+    "FLDiagonal",
+    "FRDiagonal",
+    "BLDiagonal",
+    "BRDiagonal"
+]

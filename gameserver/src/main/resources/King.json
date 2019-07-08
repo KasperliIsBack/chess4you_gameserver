@@ -1,19 +1,12 @@
-{
-    "DirectionType": [
-        0,
-        1,
-        4
-    ],
-    "Direction": [
-        0,
-        1,
-        2,
-        3,
-        6,
-        7,
-        8,
-        9,
-        14
-        15
-    ]
-}
+[
+    "Forward",
+    "Backward",
+    "Left",
+    "Right",
+    "FLDiagonal",
+    "FRDiagonal",
+    "BLDiagonal",
+    "BRDiagonal",
+    "smallRochade",
+    "bigRochade"
+]

@@ -2,7 +2,6 @@ package com.chess4you.gameserver.data.piece;
 
 import com.chess4you.gameserver.data.enums.Color;
 import com.chess4you.gameserver.data.enums.Direction;
-import com.chess4you.gameserver.data.enums.DirectionType;
 import com.chess4you.gameserver.data.enums.PieceType;
 import com.chess4you.gameserver.data.movement.Position;
 import lombok.*;
@@ -17,12 +16,10 @@ public class Piece {
     private Position position;
     private PieceType pieceType;
     private Direction[] directions;
-    private DirectionType[] directionTypes;
-    public Piece(PieceType pieceType, Direction[] directions, DirectionType[] directionTypes, Color color, Position position){
-        pieceName = this.getClass().getName() + color.toString();
+    public Piece(PieceType pieceType, Direction[] directions, Color color, Position position){
+        pieceName = pieceType.name() + color.toString();
         this.pieceType = pieceType;
         this.directions = directions;
-        this.directionTypes = directionTypes;
         this.color = color;
         this.position = position;
     }

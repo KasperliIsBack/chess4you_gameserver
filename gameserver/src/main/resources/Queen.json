@@ -1,16 +1,10 @@
-{
-    "DirectionType": [
-        0,
-        1
-    ],
-    "Direction": [
-        0,
-        1,
-        2,
-        3,
-        6,
-        7,
-        8,
-        9
-    ]
-}
+[
+    "Forward",
+    "Backward",
+    "Left",
+    "Right",
+    "FLDiagonal",
+    "FRDiagonal",
+    "BLDiagonal",
+    "BRDiagonal"
+]

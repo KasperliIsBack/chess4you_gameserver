@@ -1,5 +1,6 @@
 package com.chess4you.gameserver.service;
 
+import com.chess4you.gameserver.data.enums.Direction;
 import com.chess4you.gameserver.data.game.GameData;
 import com.chess4you.gameserver.data.board.Field;
 import com.chess4you.gameserver.data.enums.Color;
@@ -7,7 +8,6 @@ import com.chess4you.gameserver.data.enums.PieceType;
 import com.chess4you.gameserver.data.movement.Movement;
 import com.chess4you.gameserver.data.movement.Position;
 import com.chess4you.gameserver.data.piece.Piece;
-import com.chess4you.gameserver.data.piece.PieceProperties;
 import com.chess4you.gameserver.exceptionHandling.exception.*;
 import com.google.gson.Gson;
 import lombok.var;
@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -151,11 +152,15 @@ public class GameService {
         }
         List<String> posList = new ArrayList<>(mapPosPiece.keySet());
         if(reverse) {
-            Collections.reverse(posList);
-        }
-        for(var tmpPosition : posList) {
-            var position = mapPosPiece.get(tmpPosition).getPosition();
-            chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
+            for(var tmpPosition : posList) {
+                var position = mapPosPiece.get(tmpPosition).getPosition();
+                chessBoard[7 - position.getPosY()][7 -  position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
+            }
+        } else {
+            for(var tmpPosition : posList) {
+                var position = mapPosPiece.get(tmpPosition).getPosition();
+                chessBoard[position.getPosY()][ position.getPosX()] = new Field(mapPosPiece.get(tmpPosition), true);
+            }
         }
         return chessBoard;
     }
@@ -174,10 +179,12 @@ public class GameService {
     }
 
     private Piece getNewPiece(Color color, PieceType pieceType, Position position) throws URISyntaxException, IOException {
-        Path path = Paths.get(getClass().getResource(String.format("%s.json", pieceType.name())).toURI());
+        String filename = String.format("%s.json", pieceType.name());
+        URI uri = getClass().getClassLoader().getResource(filename).toURI();
+        Path path = Paths.get(uri);
         String rawData = new String(Files.readAllBytes(path));
-        var pieceProperties = new Gson().fromJson(rawData, PieceProperties.class);
-        return new Piece(pieceType, pieceProperties.getDirections(), pieceProperties.getDirectionTypes(), color, position);
+        Direction[] directions = new Gson().fromJson(rawData, Direction[].class);
+        return new Piece(pieceType, directions, color, position);
     }
 
     private Map<String, Piece> generateMapPosPiece() throws IOException, URISyntaxException {
@@ -189,9 +196,9 @@ public class GameService {
                 if(PosY == 0) {
                     mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
                 } else if(PosY == 1) {
-                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
+                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, PieceType.Pawn, new Position(PosX, PosY)));
                 } else if(PosY == 6) {
-                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.Black, listPieceType[PosX], new Position(PosX, PosY)));
+                    mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.White, PieceType.Pawn, new Position(PosX, PosY)));
                 } else if(PosY == 7) {
                     mapPosPiece.put(gson.toJson(new Position(PosX, PosY)), getNewPiece(Color.White, listPieceType[PosX], new Position(PosX, PosY)));
                 }

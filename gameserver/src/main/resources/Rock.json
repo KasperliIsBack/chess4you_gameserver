@@ -1,11 +1,6 @@
-{
-    "DirectionType": [
-        0
-    ],
-    "Direction": [
-        0,
-        1,
-        2,
-        3
-    ]
-}
+[
+    "Forward",
+    "Backward",
+    "Left",
+    "Right"
+]
