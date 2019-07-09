@@ -3,11 +3,14 @@ package com.chess4you.gameserver.service.turnservice;
 import com.chess4you.gameserver.data.enums.Color;
 import com.chess4you.gameserver.data.enums.Direction;
 import com.chess4you.gameserver.data.enums.PieceType;
+import com.chess4you.gameserver.data.enums.PositionType;
 import com.chess4you.gameserver.data.movement.Movement;
+import com.chess4you.gameserver.data.movement.MovementOperation;
 import com.chess4you.gameserver.data.movement.Position;
 import com.chess4you.gameserver.data.piece.Piece;
 import com.chess4you.gameserver.service.TurnService;
 import com.chess4you.gameserver.service.TurnValidatorService;
+import javafx.geometry.Pos;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,18 +27,22 @@ import static org.hamcrest.CoreMatchers.is;
 public class TestsTurnService {
 
     private TurnService turnService = new TurnService(new TurnValidatorService());
+    private MovementOperation movementOperation;
+    private TurnValidatorService turnValidatorService;
 
     @Test
     public void TestStartMovementPawn(){
         Direction[] directions = new Direction[]{ Direction.Forward, Direction.FLEnPasse, Direction.FREnPasse};
-        Piece pawn = new Piece(PieceType.Pawn, directions , Color.Black, new Position(1,1));
+        Piece pawn = new Piece(PieceType.Rock, directions , Color.Black, new Position(1,1));
         Map<Position, Piece> mapPosPiece = new HashMap<>();
         mapPosPiece.put(pawn.getPosition(), pawn);
 
         // Movement[] arrayOfMovementsActual = turnService.getPossibleTurnFor(mapPosPiece, pawn, false);
-        List<Integer> list = recursiveTest(new ArrayList<>(), 0);
+        //List<Integer> list = recursiveTest(new ArrayList<>(), 0);
+        Movement[] arrayOfMovementsActual = turnService.getPossibleTurnFor(mapPosPiece, pawn, false);
 
-        Assert.assertThat(list.size(), is(10));
+        Assert.assertThat(arrayOfMovementsActual.length, is(2));
+        //Assert.assertThat(list.size(), is(10));
 
     }
 
@@ -47,7 +54,6 @@ public class TestsTurnService {
         }
         return list;
     }
-
     public void AssertThatAllMovementsAreEqual(Movement[] arrayOfMovementsCorrect, Movement[] arrayOfMovementsActual) {
         for (int index = 0; index < arrayOfMovementsCorrect.length; index++) {
             Assert.assertThat(arrayOfMovementsActual[index].getNewPosition().getPosY(), is(arrayOfMovementsCorrect[index].getNewPosition().getPosY()));

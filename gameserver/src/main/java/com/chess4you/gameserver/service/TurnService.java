@@ -1,5 +1,6 @@
 package com.chess4you.gameserver.service;
 
+import com.chess4you.gameserver.data.enums.PositionType;
 import com.chess4you.gameserver.data.game.GameData;
 import com.chess4you.gameserver.data.enums.Direction;
 import com.chess4you.gameserver.data.enums.PieceType;
@@ -24,12 +25,12 @@ public class TurnService {
 
     }
 
-    public Movement[] getPossibleTurnFor(Map<Position, Piece> mapPosPiece, Piece pieceOnThatPosition, boolean reverse) {
+    public Movement[] getPossibleTurnFor(Map<Position, Piece> mapPosPiece, Piece piece, boolean isReverse) {
         List<Movement> tmpMovements = new ArrayList<>();
-        int distance = setDistance(pieceOnThatPosition);
+        int maxDistance = setDistance(piece);
 
-        for(var direction : pieceOnThatPosition.getDirections()) {
-            tmpMovements.addAll(movementsGeneral(mapPosPiece, tmpMovements, pieceOnThatPosition, direction, reverse, 0, distance ));
+        for(var direction : piece.getDirections()) {
+            addNewPosition(tmpMovements, generalMovement(mapPosPiece, tmpMovements, piece, direction,1, maxDistance, isReverse));
         }
         /*List<Movement> filteredMovements = new ArrayList<>();
         List<String> filteredMovementsString = new ArrayList<>();
@@ -42,6 +43,22 @@ public class TurnService {
         }*/
         Movement[] movements = tmpMovements.stream().toArray(Movement[]::new);
         return movements;
+    }
+
+    private void addNewPosition(List<Movement> tmpMovements, List<Movement> generalMovement) {
+        if(tmpMovements.size() != 0) {
+            if(generalMovement.size() != 0) {
+                for(Movement movement : generalMovement) {
+                    if(!tmpMovements.contains(movement)) {
+                        tmpMovements.add(movement);
+                    }
+                }
+            } else {
+                return;
+            }
+        } else {
+            tmpMovements.addAll(generalMovement);
+        }
     }
 
     private int setDistance(Piece pieceOnThatPosition) {
@@ -74,11 +91,54 @@ public class TurnService {
         return gameData;
     }
 
-    private List<Movement> movementsGeneral(Map<Position, Piece> mapPosPiece, List<Movement> movementList, Piece piece, Direction direction, boolean reverse, int distance, int maxDistance){
+    private List<Movement> generalMovement(Map<Position, Piece> mapPosPiece, List<Movement> movements, Piece piece,
+                                           Direction direction, int distance, int maxDistance, boolean isReverse) {
+        Movement tmpMovement = null;
+        PositionType tmpPositionType = null;
+
+        if(isSpecialDirection(direction)) {
+            if(checkIfSpecialMovementIsPossible()) {
+                //tmpMovement = null;
+                //tmpPositionType =  turnValidatorService.pieceOnPosition(mapPosPiece, tmpMovement.getNewPosition(), piece);
+                return movements;
+            } else {
+                return movements;
+            }
+        } else {
+            tmpMovement = movementOperation.move(direction, piece.getPosition(), distance, isReverse);
+            tmpPositionType =  turnValidatorService.pieceOnPosition(mapPosPiece, tmpMovement.getNewPosition(), piece);
+        }
+        System.out.println("Method passed " + direction + " "+ tmpPositionType + " " + new Gson().toJson(tmpMovement));
+        switch (tmpPositionType) {
+            case Friendly:
+                break;
+            case Enemy:
+                if(piece.getPieceType() != PieceType.Pawn) {
+                    movements.add(tmpMovement);
+                }
+                return movements;
+            case Nothing:
+                if(turnValidatorService.possibleMovementOnBoard(tmpMovement)) {
+                    movements.add(tmpMovement);
+                    if(distance < maxDistance) {
+                        generalMovement(mapPosPiece, movements, piece, direction, ++distance, maxDistance, isReverse);
+                    } else{
+                        return movements;
+                    }
+                } else {
+                    return movements;
+                }
+            default:
+                return  movements;
+        }
+        return movements;
+    }
+
+    private List<Movement> movementsGeneral1(Map<Position, Piece> mapPosPiece, List<Movement> movementList, Piece piece, Direction direction, boolean reverse, int distance, int maxDistance){
         distance = distance == 0 ? 1 : distance;
 
-        if(isSpecialMovement(direction)) {
-            return checkSpecialMovement(movementList);
+        if(isSpecialDirection(direction)) {
+            return  null;
         }
 
         Movement movement = movementOperation.move(direction, piece.getPosition(), distance, reverse);
@@ -97,14 +157,14 @@ public class TurnService {
                 if(turnValidatorService.possibleMovementOnBoard(movement)) {
                     movementList.add(movement);
                     if(distance < maxDistance){
-                        movementsGeneral(mapPosPiece, movementList, piece, direction, reverse, ++distance, maxDistance);
+                        //generalMovement(mapPosPiece, movementList, piece, direction, reverse, ++distance, maxDistance);
                     }
                 }
         }
         return movementList;
     }
 
-    private boolean isSpecialMovement(Direction direction) {
+    private boolean isSpecialDirection(Direction direction) {
         switch (direction) {
             case FLEnPasse:
             case FREnPasse:
@@ -117,8 +177,8 @@ public class TurnService {
         }
     }
 
-    private List<Movement> checkSpecialMovement(List<Movement> movementList) {
-        return movementList;
+    private boolean checkIfSpecialMovementIsPossible() {
+        return true;
     }
 
 }
