@@ -31,7 +31,7 @@ public class TurnService {
         for(var direction : pieceOnThatPosition.getDirections()) {
             tmpMovements.addAll(movementsGeneral(mapPosPiece, tmpMovements, pieceOnThatPosition, direction, reverse, 0, distance ));
         }
-        List<Movement> filteredMovements = new ArrayList<>();
+        /*List<Movement> filteredMovements = new ArrayList<>();
         List<String> filteredMovementsString = new ArrayList<>();
         var gson = new Gson();
         for (var movement : tmpMovements) {
@@ -39,8 +39,8 @@ public class TurnService {
                 filteredMovements.add(movement);
                 filteredMovementsString.add(gson.toJson(movement));
             }
-        }
-        Movement[] movements = filteredMovements.stream().toArray(Movement[]::new);
+        }*/
+        Movement[] movements = tmpMovements.stream().toArray(Movement[]::new);
         return movements;
     }
 
@@ -56,13 +56,20 @@ public class TurnService {
     }
 
     public GameData doTurn(GameData gameData, Movement movement) {
-        var mapPosPiece = gameData.getMapPosPiece();
-        var piece = mapPosPiece.get(new Gson().toJson(movement.getOldPosition()));
-        if(mapPosPiece.containsKey(new Gson().toJson(movement.getOldPosition()))) {
-            mapPosPiece.remove(new Gson().toJson(movement.getNewPosition()));
-        }
 
-        mapPosPiece.put(new Gson().toJson(movement.getNewPosition()), piece);
+        Map<String, Piece> mapPosPiece = gameData.getMapPosPiece();
+        String newPosition = new Gson().toJson(movement.getNewPosition());
+        String oldPosition = new Gson().toJson(movement.getOldPosition());
+        Piece piece = mapPosPiece.get(oldPosition);
+        piece.setPosition(movement.getNewPosition());
+        mapPosPiece.remove(oldPosition);
+
+        if(mapPosPiece.containsKey(newPosition)) {
+            mapPosPiece.remove(newPosition);
+            mapPosPiece.put(newPosition, piece);
+        } else {
+            mapPosPiece.put(newPosition, piece);
+        }
         gameData.setMapPosPiece(mapPosPiece);
         return gameData;
     }
@@ -89,12 +96,10 @@ public class TurnService {
             case Nothing:
                 if(turnValidatorService.possibleMovementOnBoard(movement)) {
                     movementList.add(movement);
-                    if(distance > maxDistance + 1){
+                    if(distance < maxDistance){
                         movementsGeneral(mapPosPiece, movementList, piece, direction, reverse, ++distance, maxDistance);
                     }
-                    return movementList;
                 }
-                return movementList;
         }
         return movementList;
     }
