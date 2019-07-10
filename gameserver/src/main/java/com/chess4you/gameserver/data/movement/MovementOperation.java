@@ -14,13 +14,13 @@ public class MovementOperation {
         int setPosXPositive = reverse ? PosX - distance : PosX + distance;
         int setPosXNegative = reverse ? PosX + distance : PosX - distance;
 
-        int setPosXPositiveOneDistance = reverse ? PosX + distance : PosX - 1;
-        int setPosXNegativeOneDistance = reverse ? PosX - distance : PosX + 1;
+        int setPosXPositiveOneDistance = reverse ? PosX + 1 : PosX - 1;
+        int setPosXNegativeOneDistance = reverse ? PosX - 1 : PosX + 1;
 
-        int setPosYPositiveOneDistance = reverse ? PosY - distance : PosY + 1;
-        int setPosYPositiveTwoDistance = reverse ? PosY - distance : PosY + 2;
+        int setPosYPositiveOneDistance = reverse ? PosY - 1 : PosY + 1;
+        int setPosYPositiveTwoDistance = reverse ? PosY - 2 : PosY + 2;
 
-        int setPosYNegativeTwoDistance = reverse ? PosY + distance : PosY - 2;
+        int setPosYNegativeTwoDistance = reverse ? PosY + 2 : PosY - 2;
 
         switch (direction) {
             case Forward:
